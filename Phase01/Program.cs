@@ -18,7 +18,6 @@ namespace Phase01
             // 2. Deserialize the JSON strings into lists of C# objects.
             List<Student>? students = JsonSerializer.Deserialize<List<Student>>(studentsJson);
             List<Score>? scores = JsonSerializer.Deserialize<List<Score>>(scoresJson);
-.
             if (students == null || scores == null)
             {
                 Console.WriteLine("Error: Failed to load student or score data. Please check JSON files and their content.");
