@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Phase02.Core
+namespace SearchEngine.Core
 {
     public static class FileReader
     {

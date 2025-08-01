@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Phase02.Core;
+using SearchEngine.Core;
 
-namespace Phase02
+namespace SearchEngine
 {
     internal class Program
     {

@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Phase02.Core
+namespace SearchEngine.Core
 {
     public class InvertedIndex
     {
@@ -25,7 +25,7 @@ namespace Phase02.Core
 
         public void AddDocument(string documentPath)
         {
-            var content;
+            var content = "";
             try
             {
                 content = File.ReadAllText(documentPath);
@@ -61,7 +61,7 @@ namespace Phase02.Core
             IEnumerable<string> atLeastOne,
             IEnumerable<string> mustExclude)
         {
-            var result = null;
+            IEnumerable<string> result = null;
 
             foreach (var word in mustInclude)
             {
