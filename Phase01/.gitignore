@@ -58,3 +58,7 @@ tmp/
 
 # Visual Studio Code
 .vscode/
+
+#data
+scores.json
+students.json

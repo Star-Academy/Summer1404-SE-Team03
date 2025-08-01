@@ -8,7 +8,7 @@ namespace Phase01
         public int StudentNumber { get; set; }
         public string? Lesson { get; set; }
 
-        [JsonPropertyName("Score")] // This tells JsonSerializer to map the JSON key "Score" to this property.
+        [JsonPropertyName("Score")]
         public double Value { get; set; }
     }
 }
