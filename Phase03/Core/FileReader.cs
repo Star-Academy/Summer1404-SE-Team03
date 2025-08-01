@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace SearchEngine.Core
+﻿namespace SearchEngine.Core
 {
     public static class FileReader
     {
@@ -8,7 +6,7 @@ namespace SearchEngine.Core
         {
             if (!Directory.Exists(folderPath))
             {
-                return new string[0];
+                return Array.Empty<string>();
             }
 
             return Directory.GetFiles(folderPath);

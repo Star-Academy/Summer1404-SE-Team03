@@ -1,46 +1,48 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using SearchEngine.Core;
+﻿using SearchEngine.Core;
+using SearchEngine.Core.Model;
+using SearchEngine.Core.Processing;
+using SearchEngine.UI;
 
 namespace SearchEngine
 {
-    internal class Program
+    public class SearchEngine
     {
-        static void Main(string[] args)
+        private readonly InvertedIndex _index;
+
+        public SearchEngine(InvertedIndex index)
         {
-            var baseDir = AppContext.BaseDirectory;
-            // baseDir = ...\bin\Debug\net8.0\
-            var projectRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", ".."));
-            var dataDir = Path.Combine(projectRoot, "EnglishData");
+            _index = index;
+        }
+
+        public void BuildIndex(string dataDir)
+        {
             var files = FileReader.ReadAllFileNames(dataDir);
-            var index = new InvertedIndex();
-
             foreach (var file in files)
-                index.AddDocument(file);
-
-            Console.Write("Enter query: ");
-            var line = Console.ReadLine() ?? "";
-
-            var mustInclude = new List<string>();
-            var atLeastOne = new List<string>();
-            var mustExclude = new List<string>();
-
-            foreach (var tok in line.Split(' ', StringSplitOptions.RemoveEmptyEntries))
             {
-                if (tok.StartsWith("+"))
-                    atLeastOne.Add(tok.Substring(1));
-                else if (tok.StartsWith("-"))
-                    mustExclude.Add(tok.Substring(1));
-                else
-                    mustInclude.Add(tok);
+                _index.AddDocument(file);
             }
+        }
 
-            var results = index.SmartSearch(mustInclude, atLeastOne, mustExclude);
+        public IEnumerable<string> Search(SearchQuery query)
+        {
+            return _index.SmartSearch(query);
+        }
 
-            Console.WriteLine("\nSearch results:");
-            foreach (var doc in results)
-                Console.WriteLine(Path.GetFileName(doc));
+        public static void Main(string[] args)
+        {
+            var dataDir = AppConfig.DataDirectory;
+
+            var normalizer = new Normalizer();
+            var tokenizer = new Tokenizer(normalizer);
+            var index = new InvertedIndex(tokenizer);
+            var searchEngine = new SearchEngine(index);
+
+            searchEngine.BuildIndex(dataDir);
+
+            var consoleUi = new ConsoleUi();
+            var query = consoleUi.GetQueryFromUser();
+            var results = searchEngine.Search(query);
+            consoleUi.DisplayResults(results);
         }
     }
 }
