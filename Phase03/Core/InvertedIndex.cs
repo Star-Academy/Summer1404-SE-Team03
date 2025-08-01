@@ -1,5 +1,4 @@
-﻿// File: Core/InvertedIndex.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -26,7 +25,7 @@ namespace Phase02.Core
 
         public void AddDocument(string documentPath)
         {
-            string content;
+            var content;
             try
             {
                 content = File.ReadAllText(documentPath);
@@ -62,7 +61,7 @@ namespace Phase02.Core
             IEnumerable<string> atLeastOne,
             IEnumerable<string> mustExclude)
         {
-            IEnumerable<string> result = null;
+            var result = null;
 
             foreach (var word in mustInclude)
             {

@@ -1,5 +1,4 @@
-﻿// File: Core/FileReader.cs
-using System.IO;
+﻿using System.IO;
 
 namespace Phase02.Core
 {
