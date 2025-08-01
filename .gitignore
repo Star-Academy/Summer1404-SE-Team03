@@ -61,3 +61,6 @@ tmp/
 
 # EnglishData folder (dataset)
 EnglishData/
+
+# sln files
+*.sln
