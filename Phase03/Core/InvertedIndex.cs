@@ -1,111 +1,61 @@
 ﻿using SearchEngine.Core.Model;
 using SearchEngine.Core.Processing;
+using SearchEngine.Core;
 
 namespace SearchEngine.Core
 {
-    public class InvertedIndex
+    public class InvertedIndexManager
     {
-        private readonly Dictionary<string, HashSet<string>> _index = new Dictionary<string, HashSet<string>>();
+        private readonly InvertedIndexData _invertedIndexData;
         private readonly ITokenizer _tokenizer;
 
-        public InvertedIndex(ITokenizer tokenizer)
+        public InvertedIndexManager(ITokenizer tokenizer)
         {
+            _invertedIndexData = new InvertedIndexData();
             _tokenizer = tokenizer;
         }
 
         public void AddDocument(string documentPath)
         {
-            if (!TryReadContent(documentPath, out var content))
+            if (!FileReader.TryReadFile(documentPath, out var content))
             {
                 return;
             }
 
-            var tokens = _tokenizer.Tokenize(content);
-
-            foreach (var token in tokens)
-            {
-                AddTokenToIndex(token, documentPath);
-            }
+            AddContentToIndex(content, documentPath);
         }
 
-        private bool TryReadContent(string documentPath, out string content)
+        public void AddTokenToIndex(string token, string documentIdentifier)
         {
-            try
-            {
-                content = File.ReadAllText(documentPath);
-                return true;
-            }
-            catch (IOException)
-            {
-                content = null;
-                return false;
-            }
-        }
-
-        private void AddTokenToIndex(string token, string documentPath)
-        {
-            if (!_index.TryGetValue(token, out var docSet))
+            if (!_invertedIndexData.Index.TryGetValue(token, out var docSet))
             {
                 docSet = new HashSet<string>();
-                _index[token] = docSet;
+                _invertedIndexData.Index[token] = docSet;
             }
-            docSet.Add(documentPath);
+            docSet.Add(documentIdentifier);
         }
 
-        public IEnumerable<string> SmartSearch(SearchQuery query)
+        public IEnumerable<string> GetDocumentsForToken(string token)
         {
-            var result = InitializeResultSet(query);
-            result = FilterByAtLeastOne(result, query.AtLeastOne);
-            result = FilterByMustExclude(result, query.MustExclude);
-            return result;
-        }
-
-        private IEnumerable<string> InitializeResultSet(SearchQuery query)
-        {
-            if (query.MustInclude.Any())
+            if (_invertedIndexData.Index.TryGetValue(token, out var docSet))
             {
-                return PerformAndSearch(query.MustInclude);
-            }
-            
-            return _index.Values.SelectMany(set => set).Distinct();
-        }
-
-        private IEnumerable<string> PerformAndSearch(IEnumerable<string> mustInclude)
-        {
-            IEnumerable<string> result = null;
-            foreach (var word in mustInclude)
-            {
-                var docs = Search(word.ToUpperInvariant());
-                result = result == null ? docs : result.Intersect(docs);
-            }
-            return result ?? Enumerable.Empty<string>();
-        }
-
-        private IEnumerable<string> FilterByAtLeastOne(IEnumerable<string> currentResult, IEnumerable<string> atLeastOne)
-        {
-            if (!atLeastOne.Any())
-            {
-                return currentResult;
-            }
-            var orSet = atLeastOne.SelectMany(w => Search(w.ToUpperInvariant())).ToHashSet();
-            return currentResult.Intersect(orSet);
-        }
-
-        private IEnumerable<string> FilterByMustExclude(IEnumerable<string> currentResult, IEnumerable<string> mustExclude)
-        {
-            if (!mustExclude.Any())
-            {
-                return currentResult;
-            }
-            var notSet = mustExclude.SelectMany(w => Search(w.ToUpperInvariant())).ToHashSet();
-            return currentResult.Except(notSet);
-        }
-
-        public IEnumerable<string> Search(string token)
-        {
-            if (_index.TryGetValue(token, out var docSet))
                 return docSet;
+            }
             return Enumerable.Empty<string>();
+        }
+
+        private void AddContentToIndex(string content, string documentIdentifier)
+        {
+            var tokens = _tokenizer.Tokenize(content);
+            AddTokensToIndex(tokens, documentIdentifier);
+        }
+
+        private void AddTokensToIndex(IEnumerable<string> tokens, string documentIdentifier)
+        {
+            foreach (var token in tokens)
+            {
+                AddTokenToIndex(token, documentIdentifier);
+            }
         }
     }
 }

@@ -7,38 +7,35 @@ namespace SearchEngine
 {
     public class SearchEngine
     {
-        private readonly InvertedIndex _index;
+        private readonly Searcher searcher;
 
-        public SearchEngine(InvertedIndex index)
+        public SearchEngine(string dataDir)
         {
-            _index = index;
-        }
+            var normalizer = new Normalizer();
+            var tokenizer = new Tokenizer(normalizer);
+            var index = new InvertedIndexManager(tokenizer);
 
-        public void BuildIndex(string dataDir)
-        {
             var files = FileReader.ReadAllFileNames(dataDir);
             foreach (var file in files)
             {
-                _index.AddDocument(file);
+                index.AddDocument(file);
             }
+
+            searcher = new Searcher(index);
         }
 
         public IEnumerable<string> Search(SearchQuery query)
         {
-            return _index.SmartSearch(query);
+            return searcher.SmartSearch(query);
         }
+    }
 
+    public class Program{
         public static void Main(string[] args)
         {
-            var dataDir = AppConfig.DataDirectory;
-
-            var normalizer = new Normalizer();
-            var tokenizer = new Tokenizer(normalizer);
-            var index = new InvertedIndex(tokenizer);
-            var searchEngine = new SearchEngine(index);
-
-            searchEngine.BuildIndex(dataDir);
-
+            var dataDir = AppConfig.DataDirectory;            
+            var searchEngine = new SearchEngine(dataDir);
+            
             var consoleUi = new ConsoleUi();
             var query = consoleUi.GetQueryFromUser();
             var results = searchEngine.Search(query);
