@@ -1,8 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using SearchEngine.Core;
 using SearchEngine.UI;
 
 namespace SearchEngine
 {
+    [ExcludeFromCodeCoverage]
     public class Program
     {
         public static void Main(string[] args)

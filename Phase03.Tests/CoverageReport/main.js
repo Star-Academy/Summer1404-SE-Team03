@@ -221,7 +221,6 @@ var assemblies = [
       { "name": "SearchEngine.Core.Processing.Normalizer", "rp": "SearchEngine_Normalizer.html", "cl": 15, "ucl": 0, "cal": 15, "tl": 30, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "SearchEngine.Core.Processing.Tokenizer", "rp": "SearchEngine_Tokenizer.html", "cl": 8, "ucl": 0, "cal": 8, "tl": 18, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "SearchEngine.Core.Searcher", "rp": "SearchEngine_Searcher.html", "cl": 38, "ucl": 0, "cal": 38, "tl": 62, "cb": 11, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "SearchEngine.Program", "rp": "SearchEngine_Program.html", "cl": 0, "ucl": 8, "cal": 8, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "SearchEngine.SearchEngine", "rp": "SearchEngine_SearchEngine.html", "cl": 15, "ucl": 0, "cal": 15, "tl": 34, "cb": 2, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "SearchEngine.UI.ConsoleUi", "rp": "SearchEngine_ConsoleUi.html", "cl": 16, "ucl": 9, "cal": 25, "tl": 41, "cb": 7, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
     ]},
