@@ -57,5 +57,11 @@ namespace SearchEngine.Core
                 AddTokenToIndex(token, documentIdentifier);
             }
         }
+        public IEnumerable<string> GetAllDocuments()
+        {
+            return _invertedIndexData.Index
+                .SelectMany(kvp => kvp.Value)
+                .Distinct();
+        }
     }
 }

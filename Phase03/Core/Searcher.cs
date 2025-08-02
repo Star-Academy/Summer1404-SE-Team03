@@ -22,14 +22,11 @@ namespace SearchEngine.Core
         private IEnumerable<string> InitializeResultSet(SearchQuery query)
         {
             if (query.MustInclude.Any())
-            {
                 return PerformAndSearch(query.MustInclude);
-            }
 
-            var allDocuments = new HashSet<string>();
-            var allTokens = _indexManager.GetDocumentsForToken(string.Empty);
-            return allTokens.SelectMany(doc => _indexManager.GetDocumentsForToken(doc)).Distinct();
+            return _indexManager.GetAllDocuments();
         }
+
 
         private IEnumerable<string> PerformAndSearch(IEnumerable<string> mustInclude)
         {
