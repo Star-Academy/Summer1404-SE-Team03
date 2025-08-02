@@ -213,17 +213,17 @@ var assemblies = [
   {
     "name": "SearchEngine",
     "classes": [
-      { "name": "SearchEngine.AppConfig", "rp": "SearchEngine_AppConfig.html", "cl": 6, "ucl": 0, "cal": 6, "tl": 15, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "SearchEngine.AppConfig", "rp": "SearchEngine_AppConfig.html", "cl": 0, "ucl": 6, "cal": 6, "tl": 15, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "SearchEngine.Core.FileReader", "rp": "SearchEngine_FileReader.html", "cl": 14, "ucl": 1, "cal": 15, "tl": 29, "cb": 1, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "SearchEngine.Core.InvertedIndexManager", "rp": "SearchEngine_InvertedIndexManager.html", "cl": 38, "ucl": 2, "cal": 40, "tl": 67, "cb": 7, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "SearchEngine.Core.InvertedIndexManager", "rp": "SearchEngine_InvertedIndexManager.html", "cl": 37, "ucl": 3, "cal": 40, "tl": 67, "cb": 6, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "SearchEngine.Core.Model.InvertedIndexData", "rp": "SearchEngine_InvertedIndexData.html", "cl": 5, "ucl": 0, "cal": 5, "tl": 12, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "SearchEngine.Core.Model.SearchQuery", "rp": "SearchEngine_SearchQuery.html", "cl": 9, "ucl": 0, "cal": 9, "tl": 16, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "SearchEngine.Core.Processing.Normalizer", "rp": "SearchEngine_Normalizer.html", "cl": 15, "ucl": 0, "cal": 15, "tl": 30, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "SearchEngine.Core.Processing.Tokenizer", "rp": "SearchEngine_Tokenizer.html", "cl": 8, "ucl": 0, "cal": 8, "tl": 18, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "SearchEngine.Core.Searcher", "rp": "SearchEngine_Searcher.html", "cl": 51, "ucl": 0, "cal": 51, "tl": 62, "cb": 18, "tb": 20, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "SearchEngine.Core.Searcher", "rp": "SearchEngine_Searcher.html", "cl": 38, "ucl": 0, "cal": 38, "tl": 62, "cb": 11, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "SearchEngine.Program", "rp": "SearchEngine_Program.html", "cl": 0, "ucl": 8, "cal": 8, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "SearchEngine.SearchEngine", "rp": "SearchEngine_SearchEngine.html", "cl": 0, "ucl": 15, "cal": 15, "tl": 34, "cb": 0, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "SearchEngine.UI.ConsoleUi", "rp": "SearchEngine_ConsoleUi.html", "cl": 25, "ucl": 0, "cal": 25, "tl": 41, "cb": 11, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "SearchEngine.UI.ConsoleUi", "rp": "SearchEngine_ConsoleUi.html", "cl": 16, "ucl": 9, "cal": 25, "tl": 41, "cb": 7, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
     ]},
 ];
 
