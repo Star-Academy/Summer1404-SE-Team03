@@ -7,10 +7,12 @@
 set -e
 
 REPORT_DIR="CoverageReport"
+TEST_RESULT_DIR="TestResults"
 SERVER_ADDRESS="127.0.0.1:8000"
 
 echo "✅ Step 1: Cleaning up old report directory..."
 rm -rf "$REPORT_DIR"
+rm -rf "$TEST_RESULT_DIR"
 echo "Done."
 
 echo "✅ Step 2: Running tests and collecting coverage..."
