@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using SearchEngine.Core.Model;
 
 namespace SearchEngine.UI
@@ -8,19 +9,32 @@ namespace SearchEngine.UI
         {
             Console.Write("Enter query: ");
             var line = Console.ReadLine() ?? "";
-
+            var index = line.IndexOf("get");
+            line = (index < 0) ? line : line.Remove(index, 3);
+            
+                
             var mustInclude = new List<string>();
             var atLeastOne = new List<string>();
             var mustExclude = new List<string>();
 
-            foreach (var tok in line.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            var tokens = Regex.Matches(line, @"[+-]?\"".*?\""|\S+")
+                .Cast<Match>()
+                .Select(m => m.Value);
+
+            foreach (var tok in tokens)
             {
                 if (tok.StartsWith("+"))
-                    atLeastOne.Add(tok.Substring(1));
+                {
+                    atLeastOne.Add(tok.Substring(1).Trim('\"'));
+                }
                 else if (tok.StartsWith("-"))
-                    mustExclude.Add(tok.Substring(1));
+                {
+                    mustExclude.Add(tok.Substring(1).Trim('\"'));
+                }
                 else
-                    mustInclude.Add(tok);
+                {
+                    mustInclude.Add(tok.Trim('\"'));
+                }
             }
 
             return new SearchQuery(mustInclude, atLeastOne, mustExclude);

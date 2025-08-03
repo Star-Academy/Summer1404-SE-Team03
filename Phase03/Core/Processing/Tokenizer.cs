@@ -14,5 +14,12 @@ namespace SearchEngine.Core.Processing
             var normalizedText = _normalizer.Normalize(text);
             return normalizedText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         }
+
+        public IEnumerable<(string Token, int Position)> TokenizeWithPositions(string content)
+        {
+            var normalizedText = _normalizer.Normalize(content);
+            return normalizedText.Split(' ', System.StringSplitOptions.RemoveEmptyEntries)
+                          .Select((word, index) => (word, index));
+        }
     }
 }

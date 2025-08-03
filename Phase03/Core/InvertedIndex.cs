@@ -1,6 +1,7 @@
 ﻿using SearchEngine.Core.Model;
 using SearchEngine.Core.Processing;
-using SearchEngine.Core;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SearchEngine.Core
 {
@@ -21,46 +22,95 @@ namespace SearchEngine.Core
             {
                 return;
             }
-
             AddContentToIndex(content, documentPath);
         }
 
-        public void AddTokenToIndex(string token, string documentIdentifier)
+        public void AddTokenToIndex(string token, string documentIdentifier, int position)
         {
-            if (!_invertedIndexData.Index.TryGetValue(token, out var docSet))
+            if (!_invertedIndexData.Index.TryGetValue(token, out var postingsList))
             {
-                docSet = new HashSet<string>();
-                _invertedIndexData.Index[token] = docSet;
+                postingsList = new Dictionary<string, HashSet<int>>();
+                _invertedIndexData.Index[token] = postingsList;
             }
-            docSet.Add(documentIdentifier);
+
+            if (!postingsList.TryGetValue(documentIdentifier, out var positions))
+            {
+                positions = new HashSet<int>();
+                postingsList[documentIdentifier] = positions;
+            }
+
+            positions.Add(position);
         }
 
-        public IEnumerable<string> GetDocumentsForToken(string token)
+        public IEnumerable<string> GetDocumentsForToken(string tokenOrPhrase)
         {
-            if (_invertedIndexData.Index.TryGetValue(token, out var docSet))
+            tokenOrPhrase = tokenOrPhrase.ToUpper();
+            var words = tokenOrPhrase.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+
+            if (words.Length == 1)
             {
-                return docSet;
+                if (_invertedIndexData.Index.TryGetValue(words[0], out var postingsList))
+                {
+                    return postingsList.Keys;
+                }
+                return Enumerable.Empty<string>();
             }
-            return Enumerable.Empty<string>();
+            
+            if (words.Length == 0 || !_invertedIndexData.Index.TryGetValue(words[0], out var firstWordPostings))
+            {
+                return Enumerable.Empty<string>();
+            }
+
+            var matchingDocs = new List<string>(firstWordPostings.Keys);
+
+            for (int i = 1; i < words.Length; i++)
+            {
+                var word = words[i];
+                if (!_invertedIndexData.Index.TryGetValue(word, out var currentWordPostings))
+                {
+                    return Enumerable.Empty<string>();
+                }
+
+                var stillMatchingDocs = new List<string>();
+                foreach (var docId in matchingDocs)
+                {
+                    if (currentWordPostings.ContainsKey(docId))
+                    {
+                        var prevWordPositions = _invertedIndexData.Index[words[i - 1]][docId];
+                        var currentWordPositions = currentWordPostings[docId];
+                        
+                        if (prevWordPositions.Any(pos => currentWordPositions.Contains(pos + 1)))
+                        {
+                            stillMatchingDocs.Add(docId);
+                        }
+                    }
+                }
+                matchingDocs = stillMatchingDocs;
+
+                if (!matchingDocs.Any()) break;
+            }
+            
+            return matchingDocs;
         }
 
         private void AddContentToIndex(string content, string documentIdentifier)
         {
-            var tokens = _tokenizer.Tokenize(content);
-            AddTokensToIndex(tokens, documentIdentifier);
+            var tokensWithPositions = _tokenizer.TokenizeWithPositions(content);
+            AddTokensToIndex(tokensWithPositions, documentIdentifier);
         }
 
-        private void AddTokensToIndex(IEnumerable<string> tokens, string documentIdentifier)
+        private void AddTokensToIndex(IEnumerable<(string Token, int Position)> tokensWithPositions, string documentIdentifier)
         {
-            foreach (var token in tokens)
+            foreach (var (token, position) in tokensWithPositions)
             {
-                AddTokenToIndex(token, documentIdentifier);
+                AddTokenToIndex(token, documentIdentifier, position);
             }
         }
+
         public IEnumerable<string> GetAllDocuments()
         {
             return _invertedIndexData.Index
-                .SelectMany(kvp => kvp.Value)
+                .SelectMany(kvp => kvp.Value.Keys)
                 .Distinct();
         }
     }

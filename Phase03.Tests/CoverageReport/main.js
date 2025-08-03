@@ -215,14 +215,14 @@ var assemblies = [
     "classes": [
       { "name": "SearchEngine.AppConfig", "rp": "SearchEngine_AppConfig.html", "cl": 6, "ucl": 0, "cal": 6, "tl": 15, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "SearchEngine.Core.FileReader", "rp": "SearchEngine_FileReader.html", "cl": 15, "ucl": 0, "cal": 15, "tl": 29, "cb": 2, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "SearchEngine.Core.InvertedIndexManager", "rp": "SearchEngine_InvertedIndexManager.html", "cl": 40, "ucl": 0, "cal": 40, "tl": 67, "cb": 8, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "SearchEngine.Core.Model.InvertedIndexData", "rp": "SearchEngine_InvertedIndexData.html", "cl": 5, "ucl": 0, "cal": 5, "tl": 12, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "SearchEngine.Core.InvertedIndexManager", "rp": "SearchEngine_InvertedIndexManager.html", "cl": 72, "ucl": 4, "cal": 76, "tl": 117, "cb": 25, "tb": 28, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "SearchEngine.Core.Model.InvertedIndexData", "rp": "SearchEngine_InvertedIndexData.html", "cl": 5, "ucl": 0, "cal": 5, "tl": 14, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "SearchEngine.Core.Model.SearchQuery", "rp": "SearchEngine_SearchQuery.html", "cl": 9, "ucl": 0, "cal": 9, "tl": 16, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "SearchEngine.Core.Processing.Normalizer", "rp": "SearchEngine_Normalizer.html", "cl": 15, "ucl": 0, "cal": 15, "tl": 30, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "SearchEngine.Core.Processing.Tokenizer", "rp": "SearchEngine_Tokenizer.html", "cl": 8, "ucl": 0, "cal": 8, "tl": 18, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "SearchEngine.Core.Searcher", "rp": "SearchEngine_Searcher.html", "cl": 38, "ucl": 0, "cal": 38, "tl": 62, "cb": 11, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "SearchEngine.Core.Processing.Tokenizer", "rp": "SearchEngine_Tokenizer.html", "cl": 13, "ucl": 0, "cal": 13, "tl": 25, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "SearchEngine.Core.Searcher", "rp": "SearchEngine_Searcher.html", "cl": 35, "ucl": 0, "cal": 35, "tl": 52, "cb": 10, "tb": 10, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "SearchEngine.SearchEngine", "rp": "SearchEngine_SearchEngine.html", "cl": 15, "ucl": 0, "cal": 15, "tl": 34, "cb": 2, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "SearchEngine.UI.ConsoleUi", "rp": "SearchEngine_ConsoleUi.html", "cl": 25, "ucl": 0, "cal": 25, "tl": 41, "cb": 11, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "SearchEngine.UI.ConsoleUi", "rp": "SearchEngine_ConsoleUi.html", "cl": 36, "ucl": 0, "cal": 36, "tl": 55, "cb": 12, "tb": 14, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
     ]},
 ];
 
@@ -231,9 +231,17 @@ var metrics = [{ "name": "Crap Score", "abbreviation": "crp", "explanationUrl": 
 var historicCoverageExecutionTimes = [];
 
 var riskHotspotMetrics = [
+      { "name": "Crap Score", "explanationUrl": "https://googletesting.blogspot.de/2011/02/this-code-is-crap.html" },
+      { "name": "Cyclomatic complexity", "explanationUrl": "https://en.wikipedia.org/wiki/Cyclomatic_complexity" },
 ];
 
 var riskHotspots = [
+  {
+    "assembly": "SearchEngine", "class": "SearchEngine.Core.InvertedIndexManager", "reportPath": "SearchEngine_InvertedIndexManager.html", "methodName": "GetDocumentsForToken(System.String)", "methodShortName": "GetDocumentsForToken(...)", "fileIndex": 0, "line": 46,
+    "metrics": [
+      { "value": 20, "exceeded": false },
+      { "value": 20, "exceeded": true },
+    ]},
 ];
 
 var branchCoverageAvailable = true;

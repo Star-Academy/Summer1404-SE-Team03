@@ -13,50 +13,40 @@ namespace SearchEngine.Core
 
         public IEnumerable<string> SmartSearch(SearchQuery query)
         {
-            var result = InitializeResultSet(query);
-            result = FilterByAtLeastOne(result, query.AtLeastOne);
-            result = FilterByMustExclude(result, query.MustExclude);
-            return result;
-        }
-
-        private IEnumerable<string> InitializeResultSet(SearchQuery query)
-        {
+            var mustIncludeResults = new HashSet<string>(_indexManager.GetAllDocuments());
             if (query.MustInclude.Any())
-                return PerformAndSearch(query.MustInclude);
-
-            return _indexManager.GetAllDocuments();
-        }
-
-
-        private IEnumerable<string> PerformAndSearch(IEnumerable<string> mustInclude)
-        {
-            IEnumerable<string> result = null;
-            foreach (var word in mustInclude)
             {
-                var docs = _indexManager.GetDocumentsForToken(word.ToUpperInvariant());
-                result = result == null ? docs : result.Intersect(docs);
-            }
-            return result ?? Enumerable.Empty<string>();
-        }
+                mustIncludeResults.Clear();
+                var firstTerm = query.MustInclude.First();
+                var cleanTerm = firstTerm.Trim('\"');
+                mustIncludeResults.UnionWith(_indexManager.GetDocumentsForToken(cleanTerm));
 
-        private IEnumerable<string> FilterByAtLeastOne(IEnumerable<string> currentResult, IEnumerable<string> atLeastOne)
-        {
-            if (!atLeastOne.Any())
-            {
-                return currentResult;
+                foreach (var term in query.MustInclude.Skip(1))
+                {
+                    cleanTerm = term.Trim('\"');
+                    mustIncludeResults.IntersectWith(_indexManager.GetDocumentsForToken(cleanTerm));
+                }
             }
-            var orSet = atLeastOne.SelectMany(w => _indexManager.GetDocumentsForToken(w.ToUpperInvariant())).ToHashSet();
-            return currentResult.Intersect(orSet);
-        }
 
-        private IEnumerable<string> FilterByMustExclude(IEnumerable<string> currentResult, IEnumerable<string> mustExclude)
-        {
-            if (!mustExclude.Any())
+            var atLeastOneResults = new HashSet<string>();
+            foreach (var term in query.AtLeastOne)
             {
-                return currentResult;
+                var cleanTerm = term.Trim('\"');
+                atLeastOneResults.UnionWith(_indexManager.GetDocumentsForToken(cleanTerm));
             }
-            var notSet = mustExclude.SelectMany(w => _indexManager.GetDocumentsForToken(w.ToUpperInvariant())).ToHashSet();
-            return currentResult.Except(notSet);
+
+            if (query.AtLeastOne.Any())
+            {
+                mustIncludeResults.IntersectWith(atLeastOneResults);
+            }
+
+            foreach (var term in query.MustExclude)
+            {
+                var cleanTerm = term.Trim('\"');
+                mustIncludeResults.ExceptWith(_indexManager.GetDocumentsForToken(cleanTerm));
+            }
+
+            return mustIncludeResults;
         }
     }
 }
