@@ -25,6 +25,36 @@ namespace Phase03.Tests.UI
         }
 
         [Fact]
+        public void GetQueryFromUser_PhraseAnalyzeCheck()
+        {
+            var input = "+disease -cough \"star academy\"";
+            using var reader = new StringReader(input);
+            Console.SetIn(reader);
+            var consoleUi = new ConsoleUi();
+
+            var query = consoleUi.GetQueryFromUser();
+
+            Assert.Equal(new[] { "star academy" }, query.MustInclude);
+            Assert.Equal(new[] { "disease" }, query.AtLeastOne);
+            Assert.Equal(new[] { "cough" }, query.MustExclude);
+        }
+
+        [Fact]
+        public void GetQueryFromUser_PhraseAnalyzeCheckWithSymbol()
+        {
+            var input = "+\"test atleast one\" -\"test exclude\" star";
+            using var reader = new StringReader(input);
+            Console.SetIn(reader);
+            var consoleUi = new ConsoleUi();
+
+            var query = consoleUi.GetQueryFromUser();
+
+            Assert.Equal(new[] { "star" }, query.MustInclude);
+            Assert.Equal(new[] { "test atleast one" }, query.AtLeastOne);
+            Assert.Equal(new[] { "test exclude" }, query.MustExclude);
+        }
+
+        [Fact]
         public void DisplayResults_CheckTheResultPrinted()
         {
             var consoleOutput = new StringWriter();
