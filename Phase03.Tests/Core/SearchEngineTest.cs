@@ -47,65 +47,83 @@ namespace SearchEngine.Tests
                 new SearchQuery(new[] { "search" }, new string[] { }, new string[] { }),
                 new[] { "doc2.txt", "doc4.txt" }
             };
-            
+
             yield return new object[]
             {
                 new SearchQuery(new[] { "quick", "search" }, new string[] { }, new string[] { }),
                 new[] { "doc2.txt" }
             };
-            
+
             yield return new object[]
             {
                 new SearchQuery(new string[] { }, new[] { "fox", "engine" }, new string[] { }),
                 new[] { "doc1.txt", "doc2.txt" }
             };
-            
+
             yield return new object[]
             {
                 new SearchQuery(new string[] { }, new string[] { }, new[] { "lazy" }),
                 new[] { "doc2.txt", "doc4.txt", "doc5.txt" }
             };
-            
+
             yield return new object[]
             {
                 new SearchQuery(new[] { "c" }, new string[] { }, new[] { "dog" }),
                 new[] { "doc2.txt" }
             };
-            
+
             yield return new object[]
             {
                 new SearchQuery(new[] { "dog" }, new[] { "quick", "lazy" }, new string[] { }),
                 new[] { "doc1.txt", "doc3.txt" }
             };
-            
+
             yield return new object[]
             {
                 new SearchQuery(new[] { "dog" }, new[] { "brown", "forget" }, new[] { "lazy" }),
                 new string[] { }
             };
-            
+
             yield return new object[]
             {
                 new SearchQuery(new string[] { }, new string[] { }, new string[] { }),
                 new[] { "doc1.txt", "doc2.txt", "doc3.txt", "doc4.txt", "doc5.txt" }
             };
-            
+
             yield return new object[]
             {
                 new SearchQuery(new[] { "nonexistent" }, new string[] { }, new string[] { }),
                 new string[] { }
             };
-            
+
             yield return new object[]
             {
                 new SearchQuery(new[] { "search" }, new[] { "nonexistent" }, new string[] { }),
                 new string[] { }
             };
-            
+
             yield return new object[]
             {
                 new SearchQuery(new[] { "search" }, new string[] { }, new[] { "example", "find" }),
                 new string[] { }
+            };
+
+            yield return new object[]
+            {
+                new SearchQuery(new string[] { "search engine" }, new string[] {}, new string[] {}),
+                new string[] { "doc2.txt" }
+            };
+
+            yield return new object[]
+            {
+                new SearchQuery(new string[] {}, new string[] { "powerful language" , "lazy dog"}, new string[] {}),
+                new string[] { "doc1.txt", "doc3.txt", "doc5.txt"}
+            };
+            
+            yield return new object[]
+            {
+                new SearchQuery(new string[] {}, new string[] { "powerful language" , "lazy dog"}, new[] {"quick brown"}),
+                new string[] { "doc3.txt", "doc5.txt"}
             };
         }
 

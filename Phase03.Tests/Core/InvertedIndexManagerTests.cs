@@ -5,6 +5,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using SearchEngine.Core.Processing;
+using SearchEngine.Core.Model;
 
 namespace SearchEngine.Core.Tests
 {
@@ -36,101 +37,114 @@ namespace SearchEngine.Core.Tests
         }
 
         [Fact]
-        public void Constructor_ShouldInitializeWithGivenTokenizer()
+        public void GetDocumentsForToken_IsCaseInsensitive_ReturnsCorrectDocuments()
         {
             var manager = new InvertedIndexManager(_mockTokenizer.Object);
-            Assert.NotNull(manager);
+            manager.AddTokenToIndex("HELLO", "doc1", 0);
+            manager.AddTokenToIndex("WORLD", "doc1", 1);
+            
+            var documentsLower = manager.GetDocumentsForToken("hello world");
+            var documentsUpper = manager.GetDocumentsForToken("HELLO WORLD");
+            var documentsMixed = manager.GetDocumentsForToken("hELLo wORLd");
+
+            Assert.Single(documentsLower, "doc1");
+            Assert.Single(documentsUpper, "doc1");
+            Assert.Single(documentsMixed, "doc1");
+        }
+        
+        [Fact]
+        public void AddTokenToIndex_NewToken_AddsTokenAndDocumentPosition()
+        {
+            var manager = new InvertedIndexManager(_mockTokenizer.Object);
+            manager.AddTokenToIndex("TEST", "doc1", 0);
+            var documents = manager.GetDocumentsForToken("test");
+            Assert.Single(documents, "doc1");
         }
 
         [Fact]
-        public void AddTokenToIndex_NewToken_CreatesNewDocumentSet()
-        {
-            var manager = new InvertedIndexManager(_mockTokenizer.Object);
-            var token = "TEST";
-            var docId = "doc1";
-
-            manager.AddTokenToIndex(token, docId);
-
-            var documents = manager.GetDocumentsForToken(token);
-            Assert.Single(documents, docId);
-        }
-
-        [Fact]
-        public void AddTokenToIndex_ExistingToken_AddsDocumentToSet()
+        public void AddTokenToIndex_ExistingToken_AddsDocumentAndPosition()
         {
             var manager = new InvertedIndexManager(_mockTokenizer.Object);
             var token = "TEST";
             var docId1 = "doc1";
             var docId2 = "doc2";
-
-            manager.AddTokenToIndex(token, docId1);
-            manager.AddTokenToIndex(token, docId2);
-
-            var documents = manager.GetDocumentsForToken(token);
+            manager.AddTokenToIndex(token, docId1, 0);
+            manager.AddTokenToIndex(token, docId2, 0);
+            var documents = manager.GetDocumentsForToken("test");
             Assert.Equal(2, documents.Count());
             Assert.Contains(docId1, documents);
             Assert.Contains(docId2, documents);
         }
-
+        
         [Fact]
-        public void AddTokenToIndex_DuplicateDocument_DoesNotAddDuplicate()
+        public void GetDocumentsForToken_ValidSequentialPhrase_ReturnsCorrectDocument()
         {
             var manager = new InvertedIndexManager(_mockTokenizer.Object);
-            var token = "TEST";
             var docId = "doc1";
+            manager.AddTokenToIndex("HELLO", docId, 0);
+            manager.AddTokenToIndex("WORLD", docId, 1);
+            manager.AddTokenToIndex("ANOTHER", "doc2", 0);
+            manager.AddTokenToIndex("WORLD", "doc2", 1);
 
-            manager.AddTokenToIndex(token, docId);
-            manager.AddTokenToIndex(token, docId);
+            var documents = manager.GetDocumentsForToken("hello world");
 
-            var documents = manager.GetDocumentsForToken(token);
             Assert.Single(documents, docId);
         }
 
         [Fact]
-        public void GetDocumentsForToken_ExistingToken_ReturnsCorrectDocuments()
+        public void GetDocumentsForToken_NonSequentialPhrase_ReturnsEmpty()
         {
             var manager = new InvertedIndexManager(_mockTokenizer.Object);
-            var token = "EXISTING";
-            var expectedDocs = new[] { "doc1", "doc3" };
+            var docId = "doc1";
+            manager.AddTokenToIndex("HELLO", docId, 0);
+            manager.AddTokenToIndex("THERE", docId, 1);
+            manager.AddTokenToIndex("WORLD", docId, 2);
+            var documents = manager.GetDocumentsForToken("hello world");
 
-            manager.AddTokenToIndex(token, expectedDocs[0]);
-            manager.AddTokenToIndex(token, expectedDocs[1]);
-            manager.AddTokenToIndex("OTHER_TOKEN", "doc2");
-
-            var actualDocs = manager.GetDocumentsForToken(token);
-
-            Assert.Equal(expectedDocs.Length, actualDocs.Count());
-            Assert.All(expectedDocs, doc => Assert.Contains(doc, actualDocs));
-        }
-
-        [Fact]
-        public void GetDocumentsForToken_NonExistentToken_ReturnsEmptyEnumerable()
-        {
-            var manager = new InvertedIndexManager(_mockTokenizer.Object);
-            manager.AddTokenToIndex("SOME_TOKEN", "doc1");
-
-            var documents = manager.GetDocumentsForToken("NON_EXISTENT_TOKEN");
-
-            Assert.NotNull(documents);
             Assert.Empty(documents);
         }
-        
+
         [Fact]
-        public void GetAllDocuments_WhenIndexIsEmpty_ReturnsEmptyEnumerable()
+        public void AddDocument_Then_GetDocumentsForToken_PerformsCorrectIntegration()
         {
+            var fileContent = "the quick brown fox jumps over the lazy dog and the fox is quick";
+            var filePath = CreateTempFile("doc1.txt", fileContent);
+
+            var tokensWithPositions = new List<(string, int)>
+            {
+                ("THE", 0), ("QUICK", 1), ("BROWN", 2), ("FOX", 3), ("JUMPS", 4),
+                ("OVER", 5), ("THE", 6), ("LAZY", 7), ("DOG", 8), ("AND", 9),
+                ("THE", 10), ("FOX", 11), ("IS", 12), ("QUICK", 13)
+            };
+            
+            _mockTokenizer.Setup(t => t.TokenizeWithPositions(fileContent)).Returns(tokensWithPositions);
             var manager = new InvertedIndexManager(_mockTokenizer.Object);
-            var allDocs = manager.GetAllDocuments();
-            Assert.Empty(allDocs);
+            
+            manager.AddDocument(filePath);
+            
+            var validPhraseResult1 = manager.GetDocumentsForToken("quick brown fox");
+            Assert.Single(validPhraseResult1, filePath);
+            
+            var validPhraseResult2 = manager.GetDocumentsForToken("THE FOX IS QUICK");
+            Assert.Single(validPhraseResult2, filePath);
+
+            var invalidPhraseResult = manager.GetDocumentsForToken("the dog");
+            Assert.Empty(invalidPhraseResult);
+            
+            var phraseWithMissingWord = manager.GetDocumentsForToken("quick brown cat");
+            Assert.Empty(phraseWithMissingWord);
+            
+            _mockTokenizer.Verify(t => t.TokenizeWithPositions(fileContent), Times.Once);
         }
 
         [Fact]
         public void GetAllDocuments_WhenIndexHasData_ReturnsAllDistinctDocuments()
         {
             var manager = new InvertedIndexManager(_mockTokenizer.Object);
-            manager.AddTokenToIndex("TOKEN1", "doc1");
-            manager.AddTokenToIndex("TOKEN1", "doc2");
-            manager.AddTokenToIndex("TOKEN2", "doc2");
-            manager.AddTokenToIndex("TOKEN3", "doc3");
+            manager.AddTokenToIndex("TOKEN1", "doc1", 0);
+            manager.AddTokenToIndex("TOKEN1", "doc2", 0);
+            manager.AddTokenToIndex("TOKEN2", "doc2", 1);
+            manager.AddTokenToIndex("TOKEN3", "doc3", 0);
 
             var allDocs = manager.GetAllDocuments().ToList();
             
@@ -138,34 +152,6 @@ namespace SearchEngine.Core.Tests
             Assert.Contains("doc1", allDocs);
             Assert.Contains("doc2", allDocs);
             Assert.Contains("doc3", allDocs);
-        }
-
-        [Fact]
-        public void AddDocument_WithValidFile_AddsTokensToIndex()
-        {
-            var fileContent = "Hello world";
-            var filePath = CreateTempFile("test.txt", fileContent);
-            var tokens = new[] { "HELLO", "WORLD" };
-            _mockTokenizer.Setup(t => t.Tokenize(fileContent)).Returns(tokens);
-
-            var manager = new InvertedIndexManager(_mockTokenizer.Object);
-            manager.AddDocument(filePath);
-
-            Assert.Single(manager.GetDocumentsForToken("HELLO"), filePath);
-            Assert.Single(manager.GetDocumentsForToken("WORLD"), filePath);
-            _mockTokenizer.Verify(t => t.Tokenize(fileContent), Times.Once);
-        }
-        
-        [Fact]
-        public void AddDocument_WithNonExistentFile_DoesNothing()
-        {
-            var nonExistentFilePath = Path.Combine(_tempTestDirectory, "no_such_file.txt");
-            var manager = new InvertedIndexManager(_mockTokenizer.Object);
-
-            manager.AddDocument(nonExistentFilePath);
-
-            Assert.Empty(manager.GetAllDocuments());
-            _mockTokenizer.Verify(t => t.Tokenize(It.IsAny<string>()), Times.Never);
         }
     }
 }

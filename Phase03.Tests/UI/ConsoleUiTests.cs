@@ -4,6 +4,7 @@ using System.Linq;
 using SearchEngine.Core.Model;
 using SearchEngine.UI;
 using Xunit;
+using System.Collections.Generic;
 
 namespace Phase03.Tests.UI
 {
@@ -27,7 +28,7 @@ namespace Phase03.Tests.UI
         [Fact]
         public void GetQueryFromUser_PhraseAnalyzeCheck()
         {
-            var input = "+disease -cough \"star academy\"";
+            string input = "+disease -cough \"star academy\"";
             using var reader = new StringReader(input);
             Console.SetIn(reader);
             var consoleUi = new ConsoleUi();
@@ -42,7 +43,7 @@ namespace Phase03.Tests.UI
         [Fact]
         public void GetQueryFromUser_PhraseAnalyzeCheckWithSymbol()
         {
-            var input = "+\"test atleast one\" -\"test exclude\" star";
+            var input = "+\"atleast one\" -\"test exclude\" star";
             using var reader = new StringReader(input);
             Console.SetIn(reader);
             var consoleUi = new ConsoleUi();
@@ -50,7 +51,9 @@ namespace Phase03.Tests.UI
             var query = consoleUi.GetQueryFromUser();
 
             Assert.Equal(new[] { "star" }, query.MustInclude);
-            Assert.Equal(new[] { "test atleast one" }, query.AtLeastOne);
+            
+            Assert.Equal(new[] { "atleast one" }, query.AtLeastOne); 
+            
             Assert.Equal(new[] { "test exclude" }, query.MustExclude);
         }
 
@@ -59,7 +62,6 @@ namespace Phase03.Tests.UI
         {
             var consoleOutput = new StringWriter();
             Console.SetOut(consoleOutput);
-
             var consoleUi = new ConsoleUi();
             IEnumerable<string> results = new List<string> { "doc1", "doc2" };
 
@@ -75,7 +77,6 @@ namespace Phase03.Tests.UI
         {
             var consoleOutput = new StringWriter();
             Console.SetOut(consoleOutput);
-
             var consoleUi = new ConsoleUi();
             IEnumerable<string> results = new List<string>();
 

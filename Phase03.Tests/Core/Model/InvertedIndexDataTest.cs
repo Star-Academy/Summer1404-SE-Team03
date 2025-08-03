@@ -19,35 +19,73 @@ namespace SearchEngine.Core.Model.Tests
         public void Index_CanBePopulatedAfterInitialization()
         {
             var invertedIndexData = new InvertedIndexData();
-            var word = "hello";
-            var documentId = "doc1";
-            var documentSet = new HashSet<string> { documentId };
+            var token = "hello";
+            var docId = "doc1";
+            var position = 5;
 
-            invertedIndexData.Index[word] = documentSet;
+            var positionsSet = new HashSet<int> { position };
+            var postingsList = new Dictionary<string, HashSet<int>>
+            {
+                [docId] = positionsSet
+            };
+
+            invertedIndexData.Index[token] = postingsList;
             
             Assert.Single(invertedIndexData.Index);
-            Assert.True(invertedIndexData.Index.ContainsKey(word));
-            Assert.Equal(documentSet, invertedIndexData.Index[word]);
-            Assert.Contains(documentId, invertedIndexData.Index[word]);
+            Assert.True(invertedIndexData.Index.ContainsKey(token));
+            Assert.Equal(postingsList, invertedIndexData.Index[token]);
+
+            Assert.True(invertedIndexData.Index[token].ContainsKey(docId));
+            Assert.Single(invertedIndexData.Index[token][docId]);
+            Assert.Contains(position, invertedIndexData.Index[token][docId]);
         }
 
         [Fact]
-        public void Index_ExistingHashSetCanBeModified()
+        public void Index_CanAddPositionToExistingDocumentForToken()
         {
             var invertedIndexData = new InvertedIndexData();
-            var word = "world";
-            var documentId1 = "doc1";
-            var documentId2 = "doc2";
+            var token = "world";
+            var docId = "doc1";
             
-            invertedIndexData.Index[word] = new HashSet<string> { documentId1 };
+            invertedIndexData.Index[token] = new Dictionary<string, HashSet<int>>
+            {
+                [docId] = new HashSet<int> { 0 }
+            };
             
-            Assert.Single(invertedIndexData.Index[word]);
+            Assert.Single(invertedIndexData.Index[token][docId]);
             
-            invertedIndexData.Index[word].Add(documentId2);
+            var newPosition = 10;
+            invertedIndexData.Index[token][docId].Add(newPosition);
             
-            Assert.Equal(2, invertedIndexData.Index[word].Count);
-            Assert.Contains(documentId1, invertedIndexData.Index[word]);
-            Assert.Contains(documentId2, invertedIndexData.Index[word]);
+            Assert.Equal(2, invertedIndexData.Index[token][docId].Count);
+            Assert.Contains(0, invertedIndexData.Index[token][docId]);
+            Assert.Contains(newPosition, invertedIndexData.Index[token][docId]);
+        }
+
+        [Fact]
+        public void Index_CanAddDocumentToExistingToken()
+        {
+            var invertedIndexData = new InvertedIndexData();
+            var token = "test";
+            var docId1 = "doc1";
+            
+            invertedIndexData.Index[token] = new Dictionary<string, HashSet<int>>
+            {
+                [docId1] = new HashSet<int> { 3 }
+            };
+            
+            Assert.Single(invertedIndexData.Index[token]);
+
+            var docId2 = "doc2";
+            var newPositions = new HashSet<int> { 0, 8 };
+            invertedIndexData.Index[token][docId2] = newPositions;
+
+            Assert.Equal(2, invertedIndexData.Index[token].Count);
+            
+            Assert.Contains(docId1, invertedIndexData.Index[token].Keys);
+            Assert.Contains(docId2, invertedIndexData.Index[token].Keys);
+            
+            Assert.Equal(newPositions, invertedIndexData.Index[token][docId2]);
         }
     }
 }
