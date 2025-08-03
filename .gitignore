@@ -45,6 +45,7 @@ packages/
 
 # Test Results
 TestResults/
+CoverageReport/
 *.trx
 
 # Temporary files

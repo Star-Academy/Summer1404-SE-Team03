@@ -23,5 +23,36 @@ namespace Phase03.Tests.UI
             Assert.Equal(new[] { "one" }, query.AtLeastOne);
             Assert.Equal(new[] { "two" }, query.MustExclude);
         }
+
+        [Fact]
+        public void DisplayResults_CheckTheResultPrinted()
+        {
+            var consoleOutput = new StringWriter();
+            Console.SetOut(consoleOutput);
+
+            var consoleUi = new ConsoleUi();
+            IEnumerable<string> results = new List<string> { "doc1", "doc2" };
+
+            consoleUi.DisplayResults(results);
+
+            var output = consoleOutput.ToString();
+            Assert.Contains("doc1", output);
+            Assert.Contains("doc2", output);
+        }
+
+        [Fact]
+        public void DisplayResults_WithNoResult()
+        {
+            var consoleOutput = new StringWriter();
+            Console.SetOut(consoleOutput);
+
+            var consoleUi = new ConsoleUi();
+            IEnumerable<string> results = new List<string>();
+
+            consoleUi.DisplayResults(results);
+
+            var output = consoleOutput.ToString();
+            Assert.Contains("No documents found.", output);
+        }
     }
 }
