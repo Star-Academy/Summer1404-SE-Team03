@@ -1,10 +1,12 @@
 using SearchEngine.Core.Model;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SearchEngine.Core
 {
     public class Searcher
     {
-        private readonly InvertedIndexManager _indexManager;
+        private readonly InvertedIndexManager _indexManager; // Depend on an interface
 
         public Searcher(InvertedIndexManager indexManager)
         {
@@ -13,40 +15,43 @@ namespace SearchEngine.Core
 
         public IEnumerable<string> SmartSearch(SearchQuery query)
         {
-            var mustIncludeResults = new HashSet<string>(_indexManager.GetAllDocuments());
-            if (query.MustInclude.Any())
-            {
-                mustIncludeResults.Clear();
-                var firstTerm = query.MustInclude.First();
-                var cleanTerm = firstTerm.Trim('\"');
-                mustIncludeResults.UnionWith(_indexManager.GetDocumentsForToken(cleanTerm));
-
-                foreach (var term in query.MustInclude.Skip(1))
-                {
-                    cleanTerm = term.Trim('\"');
-                    mustIncludeResults.IntersectWith(_indexManager.GetDocumentsForToken(cleanTerm));
-                }
-            }
-
-            var atLeastOneResults = new HashSet<string>();
-            foreach (var term in query.AtLeastOne)
-            {
-                var cleanTerm = term.Trim('\"');
-                atLeastOneResults.UnionWith(_indexManager.GetDocumentsForToken(cleanTerm));
-            }
+            var baseResults = GetMustIncludeResults(query.MustInclude);
 
             if (query.AtLeastOne.Any())
             {
-                mustIncludeResults.IntersectWith(atLeastOneResults);
+                var orResults = query.AtLeastOne
+                                     .SelectMany(GetDocumentsForTerm)
+                                     .ToHashSet();
+                baseResults.IntersectWith(orResults);
             }
 
             foreach (var term in query.MustExclude)
             {
-                var cleanTerm = term.Trim('\"');
-                mustIncludeResults.ExceptWith(_indexManager.GetDocumentsForToken(cleanTerm));
+                baseResults.ExceptWith(GetDocumentsForTerm(term));
             }
 
-            return mustIncludeResults;
+            return baseResults;
+        }
+
+        private HashSet<string> GetMustIncludeResults(IEnumerable<string> mustIncludeTerms)
+        {
+            if (!mustIncludeTerms.Any())
+            {
+                return new HashSet<string>(_indexManager.GetAllDocuments());
+            }
+
+            var initialSet = new HashSet<string>(GetDocumentsForTerm(mustIncludeTerms.First()));
+
+            return mustIncludeTerms.Skip(1).Aggregate(initialSet, (current, term) =>
+            {
+                current.IntersectWith(GetDocumentsForTerm(term));
+                return current;
+            });
+        }
+
+        private IEnumerable<string> GetDocumentsForTerm(string term)
+        {
+            return _indexManager.GetDocumentsForToken(term.Trim('\"'));
         }
     }
 }
