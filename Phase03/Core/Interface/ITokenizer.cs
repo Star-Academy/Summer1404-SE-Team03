@@ -1,4 +1,4 @@
-namespace SearchEngine.Core.Processing
+namespace SearchEngine.Core.Interface
 {
     public interface ITokenizer
     {

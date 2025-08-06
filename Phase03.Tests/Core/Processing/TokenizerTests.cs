@@ -1,23 +1,49 @@
-﻿using System.Linq;
+﻿using Xunit;
 using SearchEngine.Core.Processing;
-using NSubstitute;
-using Xunit;
+using System;
+using System.Linq;
 
-namespace Phase03.Tests.Core.Processing
+namespace SearchEngine.Tests.Core.Processing
 {
     public class TokenizerTests
     {
-        [Fact]
-        public void Tokenize_CallsNormalizeAndSplitsText()
+        private readonly Tokenizer _tokenizer;
+
+        public TokenizerTests()
         {
-            var normalizer = Substitute.For<INormalizer>();
-            normalizer.Normalize("ignored input").Returns("A B  C");
-            var tokenizer = new Tokenizer(normalizer);
+            _tokenizer = new Tokenizer();
+        }
 
-            var tokens = tokenizer.Tokenize("ignored input").ToList();
+        [Theory]
+        [InlineData("hello world", new[] { "hello", "world" })]
+        [InlineData("this  is   a    test", new[] { "this", "is", "a", "test" })]
+        [InlineData("  leading and trailing spaces  ", new[] { "leading", "and", "trailing", "spaces" })]
+        [InlineData("singleword", new[] { "singleword" })]
+        [InlineData("another-test with-hyphens", new[] { "another-test", "with-hyphens" })]
+        public void Tokenize_ShouldReturnCorrectTokens(string input, string[] expected)
+        {
+            var result = _tokenizer.Tokenize(input);
+            Assert.Equal(expected, result);
+        }
 
-            Assert.Equal(new[] { "A", "B", "C" }, tokens);
-            normalizer.Received(1).Normalize("ignored input");
+        [Fact]
+        public void Tokenize_EmptyString_ShouldReturnEmptyEnumerable()
+        {
+            var result = _tokenizer.Tokenize(string.Empty);
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void Tokenize_WhitespaceString_ShouldReturnEmptyEnumerable()
+        {
+            var result = _tokenizer.Tokenize("      ");
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void Tokenize_NullInput_ShouldThrowException()
+        {
+            Assert.Throws<NullReferenceException>(() => _tokenizer.Tokenize(null));
         }
     }
 }

@@ -1,10 +1,12 @@
 using SearchEngine.Core.Model;
+using SearchEngine.Core.Interface;
+using SearchEngine.Core.Processing;
 
 namespace SearchEngine.UI
 {
     public class ConsoleUi
     {
-        public SearchQuery GetQueryFromUser()
+        public T GetQueryFromUser<T>(INormalizer _normalizer) where T : ISearchQuery, new()
         {
             Console.Write("Enter query: ");
             var line = Console.ReadLine() ?? "";
@@ -23,7 +25,11 @@ namespace SearchEngine.UI
                     mustInclude.Add(tok);
             }
 
-            return new SearchQuery(mustInclude, atLeastOne, mustExclude);
+            T query = new T();
+            query.MustInclude = _normalizer.Normalize(mustInclude);
+            query.AtLeastOne = _normalizer.Normalize(atLeastOne);
+            query.MustExclude = _normalizer.Normalize(mustExclude);
+            return query;
         }
 
         public void DisplayResults(IEnumerable<string> results)

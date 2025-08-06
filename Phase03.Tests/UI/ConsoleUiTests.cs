@@ -1,58 +1,115 @@
-﻿using System;
+﻿using Xunit;
+using Moq;
+using SearchEngine.Core.Interface;
+using SearchEngine.UI;
+using System.Collections.Generic;
 using System.IO;
+using System;
 using System.Linq;
 using SearchEngine.Core.Model;
-using SearchEngine.UI;
-using Xunit;
 
-namespace Phase03.Tests.UI
+namespace SearchEngine.UnitTests.UI
 {
-    public class ConsoleUiTests
+    public class ConsoleUiTests : IDisposable
     {
-        [Fact]
-        public void GetQueryFromUser_ParsesPlusMinusAndPlainTokens()
+        private readonly Mock<INormalizer> _mockNormalizer;
+        private readonly ConsoleUi _consoleUi;
+        private readonly StringWriter _stringWriter;
+        private readonly TextWriter _originalOutput;
+        private readonly TextReader _originalInput;
+
+        public ConsoleUiTests()
         {
-            var input = "+one -two three";
-            using var reader = new StringReader(input);
-            Console.SetIn(reader);
-            var consoleUi = new ConsoleUi();
+            _mockNormalizer = new Mock<INormalizer>();
+            _consoleUi = new ConsoleUi();
+            _originalOutput = Console.Out;
+            _stringWriter = new StringWriter();
+            Console.SetOut(_stringWriter);
+            _originalInput = Console.In;
+            _mockNormalizer.Setup(n => n.Normalize(It.IsAny<IEnumerable<string>>()))
+                           .Returns<IEnumerable<string>>(tokens => tokens.Select(t => t.ToUpperInvariant()));
+        }
 
-            var query = consoleUi.GetQueryFromUser();
+        private void SetConsoleInput(string input)
+        {
+            var stringReader = new StringReader(input);
+            Console.SetIn(stringReader);
+        }
 
-            Assert.Equal(new[] { "three" }, query.MustInclude);
-            Assert.Equal(new[] { "one" }, query.AtLeastOne);
-            Assert.Equal(new[] { "two" }, query.MustExclude);
+        [Theory]
+        [InlineData("must +atLeast -exclude", new[] { "MUST" }, new[] { "ATLEAST" }, new[] { "EXCLUDE" })]
+        [InlineData("word1 word2", new[] { "WORD1", "WORD2" }, new string[0], new string[0])]
+        [InlineData("+option1 +option2", new string[0], new[] { "OPTION1", "OPTION2" }, new string[0])]
+        [InlineData("-ignore1 -ignore2", new string[0], new string[0], new[] { "IGNORE1", "IGNORE2" })]
+        [InlineData("  leading   +middle   -trailing  ", new[] { "LEADING" }, new[] { "MIDDLE" }, new[] { "TRAILING" })]
+        [InlineData("", new string[0], new string[0], new string[0])]
+        [InlineData("   ", new string[0], new string[0], new string[0])]
+        public void GetQueryFromUser_ShouldParseAndNormalizeInputCorrectly(
+            string input,
+            IEnumerable<string> expectedMust,
+            IEnumerable<string> expectedAtLeast,
+            IEnumerable<string> expectedExclude)
+        {
+            SetConsoleInput(input);
+            var result = _consoleUi.GetQueryFromUser<SearchQuery>(_mockNormalizer.Object);
+            Assert.Equal(expectedMust, result.MustInclude);
+            Assert.Equal(expectedAtLeast, result.AtLeastOne);
+            Assert.Equal(expectedExclude, result.MustExclude);
+            _mockNormalizer.Verify(n => n.Normalize(It.IsAny<IEnumerable<string>>()), Times.Exactly(3));
         }
 
         [Fact]
-        public void DisplayResults_CheckTheResultPrinted()
+        public void GetQueryFromUser_WithNullConsoleInput_ShouldReturnEmptyQuery()
         {
-            var consoleOutput = new StringWriter();
-            Console.SetOut(consoleOutput);
+            Console.SetIn(new StringReader(""));
+            var queryWithEmpty = _consoleUi.GetQueryFromUser<SearchQuery>(_mockNormalizer.Object);
+            var queryWithNull = _consoleUi.GetQueryFromUser<SearchQuery>(_mockNormalizer.Object);
 
-            var consoleUi = new ConsoleUi();
-            IEnumerable<string> results = new List<string> { "doc1", "doc2" };
+            Assert.Empty(queryWithEmpty.MustInclude);
+            Assert.Empty(queryWithEmpty.AtLeastOne);
+            Assert.Empty(queryWithEmpty.MustExclude);
 
-            consoleUi.DisplayResults(results);
-
-            var output = consoleOutput.ToString();
-            Assert.Contains("doc1", output);
-            Assert.Contains("doc2", output);
+            Assert.Empty(queryWithNull.MustInclude);
+            Assert.Empty(queryWithNull.AtLeastOne);
+            Assert.Empty(queryWithNull.MustExclude);
         }
 
         [Fact]
-        public void DisplayResults_WithNoResult()
+        public void DisplayResults_WhenResultsExist_ShouldPrintFileNames()
         {
-            var consoleOutput = new StringWriter();
-            Console.SetOut(consoleOutput);
+            var results = new List<string>
+            {
+                @"/docs/file1.txt",
+                @"/home/user/document.pdf"
+            };
+            var expectedOutputWriter = new StringWriter();
+            expectedOutputWriter.WriteLine("\nSearch results:");
+            expectedOutputWriter.WriteLine("file1.txt");
+            expectedOutputWriter.WriteLine("document.pdf");
 
-            var consoleUi = new ConsoleUi();
-            IEnumerable<string> results = new List<string>();
+            _consoleUi.DisplayResults(results);
 
-            consoleUi.DisplayResults(results);
+            Assert.Equal(expectedOutputWriter.ToString(), _stringWriter.ToString());
+        }
 
-            var output = consoleOutput.ToString();
-            Assert.Contains("No documents found.", output);
+        [Fact]
+        public void DisplayResults_WhenNoResults_ShouldPrintNotFoundMessage()
+        {
+            var results = Enumerable.Empty<string>();
+            var expectedOutputWriter = new StringWriter();
+            expectedOutputWriter.WriteLine("\nSearch results:");
+            expectedOutputWriter.WriteLine("No documents found.");
+
+            _consoleUi.DisplayResults(results);
+
+            Assert.Equal(expectedOutputWriter.ToString(), _stringWriter.ToString());
+        }
+
+        public void Dispose()
+        {
+            Console.SetOut(_originalOutput);
+            Console.SetIn(_originalInput);
+            _stringWriter.Dispose();
         }
     }
 }

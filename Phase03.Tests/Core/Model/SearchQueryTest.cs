@@ -1,62 +1,54 @@
 using Xunit;
+using SearchEngine.Core.Model;
 using System.Collections.Generic;
 using System.Linq;
-using SearchEngine.Core.Model;
 
-namespace SearchEngine.Core.Model.Tests
+namespace SearchEngine.Tests.Core.Model
 {
     public class SearchQueryTests
     {
-        public static IEnumerable<object[]> GetSearchQueryTestData()
+        [Fact]
+        public void DefaultConstructor_ShouldInitializePropertiesAsEmptyEnumerables()
         {
-            yield return new object[]
-            {
-                new List<string> { "must1", "must2" },
-                new List<string> { "atLeast1", "atLeast2" },
-                new List<string> { "exclude1", "exclude2" }
-            };
+            var searchQuery = new SearchQuery();
 
-            yield return new object[]
-            {
-                new List<string>(),
-                Enumerable.Empty<string>(),
-                new string[] { }
-            };
-
-            yield return new object[]
-            {
-                null,
-                null,
-                null
-            };
-
-            yield return new object[]
-            {
-                new List<string> { "term" },
-                new List<string>(),
-                null
-            };
-
-            yield return new object[]
-            {
-                null,
-                new List<string> { "optional" },
-                new List<string>()
-            };
+            Assert.NotNull(searchQuery.MustInclude);
+            Assert.Empty(searchQuery.MustInclude);
+            Assert.NotNull(searchQuery.AtLeastOne);
+            Assert.Empty(searchQuery.AtLeastOne);
+            Assert.NotNull(searchQuery.MustExclude);
+            Assert.Empty(searchQuery.MustExclude);
         }
 
-        [Theory]
-        [MemberData(nameof(GetSearchQueryTestData))]
-        public void Constructor_ShouldCorrectlyAssignProperties(
-            IEnumerable<string> mustInclude,
-            IEnumerable<string> atLeastOne,
-            IEnumerable<string> mustExclude)
+        [Fact]
+        public void ParameterizedConstructor_ShouldAssignPropertiesCorrectly()
         {
+            var mustInclude = new List<string> { "term1", "term2" };
+            var atLeastOne = new List<string> { "term3", "term4" };
+            var mustExclude = new List<string> { "term5" };
+
             var searchQuery = new SearchQuery(mustInclude, atLeastOne, mustExclude);
 
-            Assert.Same(mustInclude, searchQuery.MustInclude);
-            Assert.Same(atLeastOne, searchQuery.AtLeastOne);
-            Assert.Same(mustExclude, searchQuery.MustExclude);
+            Assert.Equal(mustInclude, searchQuery.MustInclude);
+            Assert.Equal(atLeastOne, searchQuery.AtLeastOne);
+            Assert.Equal(mustExclude, searchQuery.MustExclude);
+        }
+
+        [Fact]
+        public void Properties_ShouldBeSettable()
+        {
+            var searchQuery = new SearchQuery();
+            var mustInclude = new List<string> { "new_term1" };
+            var atLeastOne = new List<string> { "new_term2" };
+            var mustExclude = new List<string> { "new_term3" };
+
+            searchQuery.MustInclude = mustInclude;
+            searchQuery.AtLeastOne = atLeastOne;
+            searchQuery.MustExclude = mustExclude;
+
+            Assert.Equal(mustInclude, searchQuery.MustInclude);
+            Assert.Equal(atLeastOne, searchQuery.AtLeastOne);
+            Assert.Equal(mustExclude, searchQuery.MustExclude);
         }
     }
 }

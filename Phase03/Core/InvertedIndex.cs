@@ -1,32 +1,48 @@
 ﻿using SearchEngine.Core.Model;
 using SearchEngine.Core.Processing;
 using SearchEngine.Core;
+using SearchEngine.Core.Interface;
 
 namespace SearchEngine.Core
 {
-    public class InvertedIndexManager
+    public class InvertedIndexManager : IInvertedIndex
     {
-        private readonly InvertedIndexData _invertedIndexData;
-        private readonly ITokenizer _tokenizer;
+        private IInvertedIndexData _invertedIndexData;
 
-        public InvertedIndexManager(ITokenizer tokenizer)
+        public InvertedIndexManager(IInvertedIndexData data)
         {
-            _invertedIndexData = new InvertedIndexData();
-            _tokenizer = tokenizer;
+            _invertedIndexData = data;
         }
 
-        public void AddDocument(string documentPath)
+        public void Update(IInvertedIndexData data)
+        {
+            _invertedIndexData = data;
+        }
+
+        public void AddDocument(string documentPath, ITokenizer _tokenizer, INormalizer _nomalizer)
         {
             if (!FileReader.TryReadFile(documentPath, out var content))
             {
                 return;
             }
 
-            AddContentToIndex(content, documentPath);
+            content = _nomalizer.Normalize(content);
+            AddContentToIndex(content, documentPath, _tokenizer);
         }
 
-        public void AddTokenToIndex(string token, string documentIdentifier)
+        private void AddTokenToIndex(string token, string documentIdentifier)
         {
+            if (!_invertedIndexData.Index.TryGetValue(token, out var docSet))
+            {
+                docSet = new HashSet<string>();
+                _invertedIndexData.Index[token] = docSet;
+            }
+            docSet.Add(documentIdentifier);
+        }
+
+        public void AddTokenToIndex(string token, string documentIdentifier, INormalizer _nomalizer)
+        {
+            token = _nomalizer.Normalize(token);
             if (!_invertedIndexData.Index.TryGetValue(token, out var docSet))
             {
                 docSet = new HashSet<string>();
@@ -44,7 +60,7 @@ namespace SearchEngine.Core
             return Enumerable.Empty<string>();
         }
 
-        private void AddContentToIndex(string content, string documentIdentifier)
+        private void AddContentToIndex(string content, string documentIdentifier, ITokenizer _tokenizer)
         {
             var tokens = _tokenizer.Tokenize(content);
             AddTokensToIndex(tokens, documentIdentifier);
