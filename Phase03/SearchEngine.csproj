@@ -12,4 +12,11 @@
     <PackageReference Include="Porter2Stemmer" Version="1.0.0" />
   </ItemGroup>
 
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<PackageId>StarAcademy.CodeStar1404.Team03.SearchEngine</PackageId>
+		<Authors>Amir Ata Ghaffarian, Arian Kermani</Authors>
+		<Company>Star Academy</Company>
+	</PropertyGroup>
+
 </Project>
