@@ -13,7 +13,7 @@ namespace SearchEngine.Core
             return result;
         }
 
-        private IEnumerable<string> InitializeResultSet(ISearchQuery query, IInvertedIndex _indexmanager)
+        public IEnumerable<string> InitializeResultSet(ISearchQuery query, IInvertedIndex _indexmanager)
         {
             if (query.MustInclude.Any())
                 return PerformAndSearch(query.MustInclude, _indexmanager);
@@ -21,8 +21,7 @@ namespace SearchEngine.Core
             return _indexmanager.GetAllDocuments();
         }
 
-
-        private IEnumerable<string> PerformAndSearch(IEnumerable<string> mustInclude, IInvertedIndex _indexmanager)
+        public IEnumerable<string> PerformAndSearch(IEnumerable<string> mustInclude, IInvertedIndex _indexmanager)
         {
             IEnumerable<string> result = null;
             foreach (var word in mustInclude)
@@ -33,7 +32,7 @@ namespace SearchEngine.Core
             return result ?? Enumerable.Empty<string>();
         }
 
-        private IEnumerable<string> FilterByAtLeastOne(IEnumerable<string> currentResult, IEnumerable<string> atLeastOne, IInvertedIndex _indexmanager)
+        public IEnumerable<string> FilterByAtLeastOne(IEnumerable<string> currentResult, IEnumerable<string> atLeastOne, IInvertedIndex _indexmanager)
         {
             if (!atLeastOne.Any())
             {
@@ -43,7 +42,7 @@ namespace SearchEngine.Core
             return currentResult.Intersect(orSet);
         }
 
-        private IEnumerable<string> FilterByMustExclude(IEnumerable<string> currentResult, IEnumerable<string> mustExclude, IInvertedIndex _indexmanager)
+        public IEnumerable<string> FilterByMustExclude(IEnumerable<string> currentResult, IEnumerable<string> mustExclude, IInvertedIndex _indexmanager)
         {
             if (!mustExclude.Any())
             {

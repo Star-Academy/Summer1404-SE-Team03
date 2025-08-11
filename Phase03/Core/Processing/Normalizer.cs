@@ -20,17 +20,17 @@ namespace SearchEngine.Core.Processing
                 yield return Normalize(item);
             }
         }
-        private string RemovePunctuation(string text)
+        public string RemovePunctuation(string text)
         {
             return Regex.Replace(text, @"[^\w\s]", " ");
         }
 
-        private string ConsolidateWhitespace(string text)
+        public string ConsolidateWhitespace(string text)
         {
             return Regex.Replace(text, @"\s+", " ").Trim();
         }
 
-        private string ConvertToUppercase(string text)
+        public string ConvertToUppercase(string text)
         {
             return text.ToUpperInvariant();
         }
