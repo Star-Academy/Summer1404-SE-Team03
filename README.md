@@ -1,1 +1,1 @@
-[![build](https://github.com/Star-Academy/Summer1404-SE-Team03/actions/workflows/buildPipeline.yml/badge.svg)](https://github.com/Star-Academy/Summer1404-SE-Team03/actions/workflows/buildPipeline.yml)
+[![build](https://github.com/Star-Academy/Summer1404-SE-Team03/actions/workflows/buildPipeline.yml/badge.svg?branch=Phase06)](https://github.com/Star-Academy/Summer1404-SE-Team03/actions/workflows/buildPipeline.yml)
