@@ -2,7 +2,7 @@ name: build
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, main, Phase06]
   pull_request:
     branches: [master, main]
 
@@ -17,18 +17,19 @@ jobs:
         uses: actions/setup-dotnet@v2
         with:
           dotnet-version: 8.0.x
+          cache: true
 
       - name: Install dependencies
         run: dotnet restore
-        working-directory: Phase05/
+        working-directory: ./
 
       - name: Build
         run: dotnet build --configuration Release --no-restore
-        working-directory: Phase05/
+        working-directory: ./
 
       - name: Test
         run: dotnet test --no-restore --verbosity normal --collect:"XPlat Code Coverage"
-        working-directory: Phase05/
+        working-directory: ./
 
       - name: Publish code coverage reports to codecove.io
         uses: codecov/codecov-action@v1
