@@ -1,0 +1,66 @@
+# Visual Studio
+.vs/
+ ../.vs/
+*.sln.ide/
+*.suo
+*.user
+*.userosf
+*.userprefs
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.vssscc
+*.vspscc
+*.vsscc
+*.bak
+*.log
+*.resharper
+*.dotCover
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+ARM/
+ARM64/
+bin/
+obj/
+[Ll]og/
+
+# Packages
+packages/
+*.nupkg
+*.snupkg
+*.dll
+*.exe
+*.pdb
+*.cache
+*.xml
+*.json # Be careful with this, if your solution relies on JSON data files, they should not be ignored.
+
+# Rider
+.idea/
+
+# Test Results
+TestResults/
+*.trx
+
+# Temporary files
+temp/
+tmp/
+
+# User-specific files
+*.settings
+*.local
+*.VC.db
+
+# Visual Studio Code
+.vscode/
+
+# EnglishData folder (dataset)
+EnglishData/
+
+# sln files
+*.sln
