@@ -17,6 +17,7 @@
 *.log
 *.resharper
 *.dotCover
+.vscode
 
 # Build results
 [Dd]ebug/
@@ -50,6 +51,7 @@ TestResults/
 # Temporary files
 temp/
 tmp/
+Migrations/
 
 # User-specific files
 *.settings
