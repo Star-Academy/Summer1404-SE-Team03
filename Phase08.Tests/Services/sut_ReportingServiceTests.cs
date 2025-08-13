@@ -43,10 +43,10 @@ namespace Phase08.Tests.Services
         {
             var students = new List<IStudent>
             {
-                new Student { StudentNumber = 1, FirstName = "Low", LastName = "Scorer", Scores = new List<Score> { new Score { Value = 10 }, new Score { Value = 12 } } }, // Avg 11
-                new Student { StudentNumber = 2, FirstName = "High", LastName = "Scorer", Scores = new List<Score> { new Score { Value = 20 }, new Score { Value = 18 } } }, // Avg 19
-                new Student { StudentNumber = 3, FirstName = "Mid", LastName = "Scorer", Scores = new List<Score> { new Score { Value = 15 }, new Score { Value = 15 } } }, // Avg 15
-                new Student { StudentNumber = 4, FirstName = "No", LastName = "Scores", Scores = new List<Score>() } // Avg 0
+                new Student { StudentNumber = 1, FirstName = "Low", LastName = "Scorer", Scores = new List<Score> { new Score { Value = 10 }, new Score { Value = 12 } } },
+                new Student { StudentNumber = 2, FirstName = "High", LastName = "Scorer", Scores = new List<Score> { new Score { Value = 20 }, new Score { Value = 18 } } },
+                new Student { StudentNumber = 3, FirstName = "Mid", LastName = "Scorer", Scores = new List<Score> { new Score { Value = 15 }, new Score { Value = 15 } } },
+                new Student { StudentNumber = 4, FirstName = "No", LastName = "Scores", Scores = new List<Score>() }
             };
             _dbExecuterMock.GetAllStudentsWithScoresAsync().Returns(students);
             var expectedOrder = new[] { 2, 3, 1, 4 };
