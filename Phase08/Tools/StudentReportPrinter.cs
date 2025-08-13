@@ -2,9 +2,6 @@ using ScoreManager.DTOs;
 
 namespace ScoreManager.Tools
 {
-    /// <summary>
-    /// Handles the presentation of student reports. Its only job is to print. (SRP)
-    /// </summary>
     public class StudentReportPrinter
     {
         public void PrintTopStudents(IEnumerable<StudentAverageScoreDto> topStudents)
@@ -25,7 +22,7 @@ namespace ScoreManager.Tools
                     $"Rank #{rank++, -3} | " +
                     $"Student ID: {student.StudentNumber, -5} | " +
                     $"Name: {student.FirstName} {student.LastName, -20} | " +
-                    $"Average Score: {student.AverageScore:F2}" // F2 formats the double to 2 decimal places
+                    $"Average Score: {student.AverageScore:F2}"
                 );
             }
              Console.WriteLine("==========================================");

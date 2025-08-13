@@ -1,6 +1,7 @@
 ﻿using ScoreManager.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace ScoreManager.Models
 {
@@ -17,15 +18,12 @@ namespace ScoreManager.Models
         public string Lesson { get; set; } = string.Empty;
 
         [Required]
+        [JsonPropertyName("Score")]
         public double Value { get; set; }
 
-        // --- CORRECTION ---
-        // For EF Core's relationship mapping, use the concrete Student type.
         [ForeignKey("StudentNumber")]
         public Student Student { get; set; } = null!;
 
-        // This explicitly implements the interface property.
-        // The rest of your app sees IStudent, but EF sees the concrete Student.
         IStudent IScore.Student
         {
             get => Student;

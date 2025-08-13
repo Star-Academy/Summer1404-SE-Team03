@@ -14,7 +14,6 @@ namespace ScoreManager.Services
 
         public async Task<IScore> AddScoreForStudentAsync(int studentNumber, string lesson, double scoreValue)
         {
-            // Business logic: check if student exists before adding a score
             var student = await _dbExecuter.GetStudentByNumberAsync(studentNumber);
             if (student == null)
             {
