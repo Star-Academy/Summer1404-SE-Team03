@@ -5,8 +5,8 @@ namespace ScoreManager.DataBase
 {
     public class ScoreManagerDbContext : DbContext
     {
-        public DbSet<Student> Students { get; set; }
-        public DbSet<Score> Scores { get; set; }
+        public virtual DbSet<Student> Students { get; set; }
+        public virtual DbSet<Score> Scores { get; set; }
 
         public ScoreManagerDbContext(DbContextOptions<ScoreManagerDbContext> options)
             : base(options)
@@ -20,8 +20,6 @@ namespace ScoreManager.DataBase
             modelBuilder.Entity<Student>(entity =>
             {
                 entity.HasKey(s => s.StudentNumber);
-
-
                 entity.HasMany(student => student.Scores)
                       .WithOne(score => score.Student)
                       .HasForeignKey(score => score.StudentNumber)
@@ -31,7 +29,6 @@ namespace ScoreManager.DataBase
             modelBuilder.Entity<Score>(entity =>
             {
                 entity.HasKey(s => s.Id);
-
                 entity.Property(s => s.Lesson).IsRequired();
             });
         }
