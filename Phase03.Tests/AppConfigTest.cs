@@ -1,24 +1,30 @@
-using Xunit;
 using System;
 using System.IO;
-using SearchEngine;
+using FluentAssertions;
+using Xunit;
 
 namespace SearchEngine.Tests
 {
     public class AppConfigTests
     {
-        [Fact]
-        public void DataDirectory_ShouldBeCorrectlyInitialized()
+        public AppConfigTests()
         {
+        }
+
+        [Fact]
+        public void DataDirectory_WhenAccessed_ShouldReturnCorrectlyInitializedPath()
+        {
+            // Arrange
             var baseDir = AppContext.BaseDirectory;
             var projectRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", ".."));
             var expectedPath = Path.Combine(projectRoot, "EnglishData");
 
+            // Act
             var actualPath = AppConfig.DataDirectory;
 
-            Assert.NotNull(actualPath);
-            Assert.EndsWith(Path.DirectorySeparatorChar + "EnglishData", actualPath);
-            Assert.Equal(expectedPath, actualPath);
+            // Assert
+            actualPath.Should().NotBeNull();
+            actualPath.Should().Be(expectedPath);
         }
     }
 }

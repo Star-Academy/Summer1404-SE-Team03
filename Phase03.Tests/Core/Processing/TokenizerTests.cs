@@ -1,17 +1,18 @@
-﻿using Xunit;
+﻿using System;
+using System.Collections.Generic;
+using FluentAssertions;
 using SearchEngine.Core.Processing;
-using System;
-using System.Linq;
+using Xunit;
 
 namespace SearchEngine.Tests.Core.Processing
 {
     public class TokenizerTests
     {
-        private readonly Tokenizer _tokenizer;
+        private readonly Tokenizer _sut;
 
         public TokenizerTests()
         {
-            _tokenizer = new Tokenizer();
+            _sut = new Tokenizer();
         }
 
         [Theory]
@@ -20,30 +21,49 @@ namespace SearchEngine.Tests.Core.Processing
         [InlineData("  leading and trailing spaces  ", new[] { "leading", "and", "trailing", "spaces" })]
         [InlineData("singleword", new[] { "singleword" })]
         [InlineData("another-test with-hyphens", new[] { "another-test", "with-hyphens" })]
-        public void Tokenize_ShouldReturnCorrectTokens(string input, string[] expected)
+        public void Tokenize_WhenGivenAString_ShouldReturnCorrectTokens(string input, IEnumerable<string> expected)
         {
-            var result = _tokenizer.Tokenize(input);
-            Assert.Equal(expected, result);
+            // Act
+            var result = _sut.Tokenize(input);
+
+            // Assert
+            result.Should().BeEquivalentTo(expected);
         }
 
         [Fact]
-        public void Tokenize_EmptyString_ShouldReturnEmptyEnumerable()
+        public void Tokenize_WhenGivenAnEmptyString_ShouldReturnEmptyEnumerable()
         {
-            var result = _tokenizer.Tokenize(string.Empty);
-            Assert.Empty(result);
+            // Arrange
+            var input = string.Empty;
+
+            // Act
+            var result = _sut.Tokenize(input);
+
+            // Assert
+            result.Should().BeEmpty();
         }
 
         [Fact]
-        public void Tokenize_WhitespaceString_ShouldReturnEmptyEnumerable()
+        public void Tokenize_WhenGivenAWhitespaceString_ShouldReturnEmptyEnumerable()
         {
-            var result = _tokenizer.Tokenize("      ");
-            Assert.Empty(result);
+            // Arrange
+            var input = "      ";
+
+            // Act
+            var result = _sut.Tokenize(input);
+
+            // Assert
+            result.Should().BeEmpty();
         }
 
         [Fact]
-        public void Tokenize_NullInput_ShouldThrowException()
+        public void Tokenize_WhenGivenNullInput_ShouldThrowNullReferenceException()
         {
-            Assert.Throws<NullReferenceException>(() => _tokenizer.Tokenize(null));
+            // Arrange
+            Action act = () => _sut.Tokenize(null);
+
+            // Act & Assert
+            act.Should().Throw<NullReferenceException>();
         }
     }
 }

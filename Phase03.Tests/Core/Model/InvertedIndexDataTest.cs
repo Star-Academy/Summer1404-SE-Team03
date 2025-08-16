@@ -1,25 +1,27 @@
-using Xunit;
-using System.Collections.Generic;
+using FluentAssertions;
 using SearchEngine.Core.Model;
+using Xunit;
 
 namespace SearchEngine.Tests.Core.Model
 {
     public class InvertedIndexDataTests
     {
-        [Fact]
-        public void Constructor_ShouldInitializeIndex()
-        {
-            var invertedIndexData = new InvertedIndexData();
+        private readonly InvertedIndexData _sut;
 
-            Assert.NotNull(invertedIndexData.Index);
+        public InvertedIndexDataTests()
+        {
+            _sut = new InvertedIndexData();
         }
 
         [Fact]
-        public void Index_ShouldBeEmpty_AfterInitialization()
+        public void Constructor_WhenCalled_ShouldInitializeAnEmptyIndex()
         {
-            var invertedIndexData = new InvertedIndexData();
+            // Act
+            var index = _sut.Index;
 
-            Assert.Empty(invertedIndexData.Index);
+            // Assert
+            index.Should().NotBeNull();
+            index.Should().BeEmpty();
         }
     }
 }

@@ -1,180 +1,202 @@
-﻿using Xunit;
-using Moq;
-using SearchEngine.Core.Interface;
-using SearchEngine.Core;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
-using System;
+using System.Linq;
+using FluentAssertions;
+using NSubstitute;
+using SearchEngine.Core;
+using SearchEngine.Core.Interface;
 using SearchEngine.Core.Model;
+using Xunit;
 
 namespace SearchEngine.Tests.Core
 {
     public class InvertedIndexManagerTests : IDisposable
     {
-        private readonly Mock<IInvertedIndexData> _mockInvertedIndexData;
-        private readonly Mock<ITokenizer> _mockTokenizer;
-        private readonly Mock<INormalizer> _mockNormalizer;
-        private readonly InvertedIndexManager _invertedIndexManager;
+        private readonly IInvertedIndexData _invertedIndexData;
+        private readonly ITokenizer _tokenizer;
+        private readonly INormalizer _normalizer;
+        private readonly InvertedIndexManager _sut;
         private readonly string _tempDirectory;
 
         public InvertedIndexManagerTests()
         {
-            _mockInvertedIndexData = new Mock<IInvertedIndexData>();
-            _mockTokenizer = new Mock<ITokenizer>();
-            _mockNormalizer = new Mock<INormalizer>();
-            _invertedIndexManager = new InvertedIndexManager(_mockInvertedIndexData.Object);
+            _invertedIndexData = Substitute.For<IInvertedIndexData>();
+            _tokenizer = Substitute.For<ITokenizer>();
+            _normalizer = Substitute.For<INormalizer>();
+            _sut = new InvertedIndexManager(_invertedIndexData);
             _tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(_tempDirectory);
         }
 
         [Fact]
-        public void Update_ShouldChangeInternalDataSource()
+        public void Update_WhenGivenNewDataSource_ShouldChangeInternalDataSource()
         {
-            var initialData = new Mock<IInvertedIndexData>();
+            // Arrange
+            var initialData = Substitute.For<IInvertedIndexData>();
             var initialIndex = new Dictionary<string, HashSet<string>> { { "initial", new HashSet<string> { "doc1" } } };
-            initialData.Setup(d => d.Index).Returns(initialIndex);
-            var manager = new InvertedIndexManager(initialData.Object);
+            initialData.Index.Returns(initialIndex);
+            var sut = new InvertedIndexManager(initialData);
 
-            var newData = new Mock<IInvertedIndexData>();
+            var newData = Substitute.For<IInvertedIndexData>();
             var newIndex = new Dictionary<string, HashSet<string>> { { "new", new HashSet<string> { "doc2" } } };
-            newData.Setup(d => d.Index).Returns(newIndex);
+            newData.Index.Returns(newIndex);
 
-            manager.Update(newData.Object);
-            var result = manager.GetDocumentsForToken("new");
+            // Act
+            sut.Update(newData);
+            var result = sut.GetDocumentsForToken("new");
+            var oldResult = sut.GetDocumentsForToken("initial");
 
-            Assert.Contains("doc2", result);
-            Assert.DoesNotContain("doc1", result);
-            Assert.Empty(manager.GetDocumentsForToken("initial"));
+
+            // Assert
+            result.Should().Contain("doc2");
+            result.Should().NotContain("doc1");
+            oldResult.Should().BeEmpty();
         }
 
         [Fact]
-        public void AddTokenToIndex_WithNormalizer_AddsNewToken()
+        public void AddTokenToIndex_WhenTokenIsNew_ShouldAddNewTokenAndDocument()
         {
+            // Arrange
             var index = new Dictionary<string, HashSet<string>>();
-            _mockInvertedIndexData.Setup(d => d.Index).Returns(index);
-            _mockNormalizer.Setup(n => n.Normalize(It.IsAny<string>())).Returns<string>(s => s.ToUpper());
+            _invertedIndexData.Index.Returns(index);
+            _normalizer.Normalize("token").Returns("TOKEN");
 
-            _invertedIndexManager.AddTokenToIndex("token", "doc1", _mockNormalizer.Object);
+            // Act
+            _sut.AddTokenToIndex("token", "doc1", _normalizer);
 
-            Assert.True(index.ContainsKey("TOKEN"));
-            Assert.Contains("doc1", index["TOKEN"]);
-            _mockNormalizer.Verify(n => n.Normalize("token"), Times.Once);
+            // Assert
+            _normalizer.Received(1).Normalize("token");
+            index.Should().ContainKey("TOKEN");
+            index["TOKEN"].Should().Contain("doc1");
         }
 
         [Fact]
-        public void AddTokenToIndex_WithNormalizer_AddsToExistingToken()
+        public void AddTokenToIndex_WhenTokenExists_ShouldAddDocumentToExistingToken()
         {
+            // Arrange
             var index = new Dictionary<string, HashSet<string>>
             {
                 { "TOKEN", new HashSet<string> { "doc1" } }
             };
-            _mockInvertedIndexData.Setup(d => d.Index).Returns(index);
-            _mockNormalizer.Setup(n => n.Normalize(It.IsAny<string>())).Returns<string>(s => s.ToUpper());
+            _invertedIndexData.Index.Returns(index);
+            _normalizer.Normalize("token").Returns("TOKEN");
 
-            _invertedIndexManager.AddTokenToIndex("token", "doc2", _mockNormalizer.Object);
+            // Act
+            _sut.AddTokenToIndex("token", "doc2", _normalizer);
 
-            Assert.Equal(2, index["TOKEN"].Count);
-            Assert.Contains("doc1", index["TOKEN"]);
-            Assert.Contains("doc2", index["TOKEN"]);
+            // Assert
+            index["TOKEN"].Should().HaveCount(2);
+            index["TOKEN"].Should().BeEquivalentTo(new[] { "doc1", "doc2" });
         }
 
         [Fact]
-        public void GetDocumentsForToken_TokenExists_ReturnsDocuments()
+        public void GetDocumentsForToken_WhenTokenExists_ShouldReturnAssociatedDocuments()
         {
+            // Arrange
             var expectedDocs = new HashSet<string> { "doc1", "doc2" };
             var index = new Dictionary<string, HashSet<string>>
             {
                 { "TOKEN", expectedDocs }
             };
-            _mockInvertedIndexData.Setup(d => d.Index).Returns(index);
+            _invertedIndexData.Index.Returns(index);
 
-            var result = _invertedIndexManager.GetDocumentsForToken("TOKEN");
+            // Act
+            var result = _sut.GetDocumentsForToken("TOKEN");
 
-            Assert.Equal(expectedDocs, result);
+            // Assert
+            result.Should().BeEquivalentTo(expectedDocs);
         }
 
         [Fact]
-        public void GetDocumentsForToken_TokenDoesNotExist_ReturnsEmptyEnumerable()
+        public void GetDocumentsForToken_WhenTokenDoesNotExist_ShouldReturnEmptyEnumerable()
         {
-            var index = new Dictionary<string, HashSet<string>>();
-            _mockInvertedIndexData.Setup(d => d.Index).Returns(index);
+            // Arrange
+            _invertedIndexData.Index.Returns(new Dictionary<string, HashSet<string>>());
 
-            var result = _invertedIndexManager.GetDocumentsForToken("NONEXISTENT");
+            // Act
+            var result = _sut.GetDocumentsForToken("NONEXISTENT");
 
-            Assert.Empty(result);
+            // Assert
+            result.Should().BeEmpty();
         }
 
         [Fact]
-        public void GetAllDocuments_ShouldReturnDistinctDocuments()
+        public void GetAllDocuments_WhenIndexHasDocuments_ShouldReturnAllDistinctDocuments()
         {
+            // Arrange
             var index = new Dictionary<string, HashSet<string>>
             {
                 { "TOKEN1", new HashSet<string> { "doc1", "doc2" } },
                 { "TOKEN2", new HashSet<string> { "doc2", "doc3" } },
                 { "TOKEN3", new HashSet<string> { "doc1", "doc3" } }
             };
-            _mockInvertedIndexData.Setup(d => d.Index).Returns(index);
+            _invertedIndexData.Index.Returns(index);
             var expected = new List<string> { "doc1", "doc2", "doc3" };
 
-            var result = _invertedIndexManager.GetAllDocuments().ToList();
+            // Act
+            var result = _sut.GetAllDocuments();
 
-            Assert.Equal(expected.Count, result.Count);
-            Assert.All(expected, item => Assert.Contains(item, result));
+            // Assert
+            result.Should().BeEquivalentTo(expected);
         }
 
         [Fact]
-        public void GetAllDocuments_EmptyIndex_ReturnsEmptyEnumerable()
+        public void GetAllDocuments_WhenIndexIsEmpty_ShouldReturnEmptyEnumerable()
         {
-            var index = new Dictionary<string, HashSet<string>>();
-            _mockInvertedIndexData.Setup(d => d.Index).Returns(index);
+            // Arrange
+            _invertedIndexData.Index.Returns(new Dictionary<string, HashSet<string>>());
 
-            var result = _invertedIndexManager.GetAllDocuments();
+            // Act
+            var result = _sut.GetAllDocuments();
 
-            Assert.Empty(result);
+            // Assert
+            result.Should().BeEmpty();
         }
 
         [Fact]
-        public void AddDocument_FileExists_AddsTokensToIndex()
+        public void AddDocument_WhenFileExists_ShouldAddAllItsTokensToIndex()
         {
+            // Arrange
             var filePath = Path.Combine(_tempDirectory, "test.txt");
             var fileContent = "some content here";
             File.WriteAllText(filePath, fileContent);
 
             var normalizedContent = "SOME CONTENT HERE";
             var tokens = new[] { "SOME", "CONTENT", "HERE" };
+            _normalizer.Normalize(fileContent).Returns(normalizedContent);
+            _tokenizer.Tokenize(normalizedContent).Returns(tokens);
 
             var realIndexData = new InvertedIndexData();
-            var manager = new InvertedIndexManager(realIndexData);
+            var sut = new InvertedIndexManager(realIndexData);
 
-            _mockNormalizer.Setup(n => n.Normalize(fileContent)).Returns(normalizedContent);
-            _mockTokenizer.Setup(t => t.Tokenize(normalizedContent)).Returns(tokens);
+            // Act
+            sut.AddDocument(filePath, _tokenizer, _normalizer);
 
-            manager.AddDocument(filePath, _mockTokenizer.Object, _mockNormalizer.Object);
+            // Assert
+            _normalizer.Received(1).Normalize(fileContent);
+            _tokenizer.Received(1).Tokenize(normalizedContent);
 
-            _mockNormalizer.Verify(n => n.Normalize(fileContent), Times.Once);
-            _mockTokenizer.Verify(t => t.Tokenize(normalizedContent), Times.Once);
-
-            Assert.True(realIndexData.Index.ContainsKey("SOME"));
-            Assert.Contains(filePath, realIndexData.Index["SOME"]);
-            Assert.True(realIndexData.Index.ContainsKey("CONTENT"));
-            Assert.Contains(filePath, realIndexData.Index["CONTENT"]);
-            Assert.True(realIndexData.Index.ContainsKey("HERE"));
-            Assert.Contains(filePath, realIndexData.Index["HERE"]);
+            realIndexData.Index.Should().ContainKey("SOME").WhoseValue.Should().Contain(filePath);
+            realIndexData.Index.Should().ContainKey("CONTENT").WhoseValue.Should().Contain(filePath);
+            realIndexData.Index.Should().ContainKey("HERE").WhoseValue.Should().Contain(filePath);
         }
 
         [Fact]
-        public void AddDocument_FileDoesNotExist_DoesNothing()
+        public void AddDocument_WhenFileDoesNotExist_ShouldDoNothing()
         {
+            // Arrange
             var nonExistentPath = Path.Combine(_tempDirectory, "nonexistent.txt");
             var realIndexData = new InvertedIndexData();
-            var manager = new InvertedIndexManager(realIndexData);
+            var sut = new InvertedIndexManager(realIndexData);
 
-            manager.AddDocument(nonExistentPath, _mockTokenizer.Object, _mockNormalizer.Object);
+            // Act
+            sut.AddDocument(nonExistentPath, _tokenizer, _normalizer);
 
-            _mockNormalizer.Verify(n => n.Normalize(It.IsAny<string>()), Times.Never);
-            _mockTokenizer.Verify(t => t.Tokenize(It.IsAny<string>()), Times.Never);
-            Assert.Empty(realIndexData.Index);
+            // Assert
+            _normalizer.DidNotReceive().Normalize(Arg.Any<string>());
+            _tokenizer.DidNotReceive().Tokenize(Arg.Any<string>());
+            realIndexData.Index.Should().BeEmpty();
         }
 
         public void Dispose()

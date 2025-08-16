@@ -1,156 +1,186 @@
-﻿using Xunit;
-using Moq;
-using SearchEngine.Core.Interface;
-using SearchEngine.Core;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using FluentAssertions;
+using NSubstitute;
+using SearchEngine.Core;
+using SearchEngine.Core.Interface;
+using Xunit;
 
 namespace SearchEngine.Tests.Core
 {
     public class SearcherTests
     {
-        private readonly Searcher _searcher;
-        private readonly Mock<IInvertedIndex> _mockIndexManager;
-        private readonly Mock<ISearchQuery> _mockQuery;
+        private readonly Searcher _sut;
+        private readonly IInvertedIndex _invertedIndex;
+        private readonly ISearchQuery _query;
 
         public SearcherTests()
         {
-            _searcher = new Searcher();
-            _mockIndexManager = new Mock<IInvertedIndex>();
-            _mockQuery = new Mock<ISearchQuery>();
+            _sut = new Searcher();
+            _invertedIndex = Substitute.For<IInvertedIndex>();
+            _query = Substitute.For<ISearchQuery>();
 
             var allDocs = new List<string> { "doc1", "doc2", "doc3", "doc4" };
-            _mockIndexManager.Setup(i => i.GetAllDocuments()).Returns(allDocs);
-            _mockIndexManager.Setup(i => i.GetDocumentsForToken("MUST1")).Returns(new List<string> { "doc1", "doc2" });
-            _mockIndexManager.Setup(i => i.GetDocumentsForToken("MUST2")).Returns(new List<string> { "doc2", "doc3" });
-            _mockIndexManager.Setup(i => i.GetDocumentsForToken("ATLEAST1")).Returns(new List<string> { "doc1", "doc4" });
-            _mockIndexManager.Setup(i => i.GetDocumentsForToken("ATLEAST2")).Returns(new List<string> { "doc3", "doc4" });
-            _mockIndexManager.Setup(i => i.GetDocumentsForToken("EXCLUDE1")).Returns(new List<string> { "doc1", "doc3" });
-            _mockIndexManager.Setup(i => i.GetDocumentsForToken("EXCLUDE2")).Returns(new List<string> { "doc4" });
-            _mockIndexManager.Setup(i => i.GetDocumentsForToken(It.Is<string>(s => !new[] { "MUST1", "MUST2", "ATLEAST1", "ATLEAST2", "EXCLUDE1", "EXCLUDE2" }.Contains(s))))
-                             .Returns(Enumerable.Empty<string>());
+            _invertedIndex.GetAllDocuments().Returns(allDocs);
+            _invertedIndex.GetDocumentsForToken("MUST1").Returns(new HashSet<string> { "doc1", "doc2" });
+            _invertedIndex.GetDocumentsForToken("MUST2").Returns(new HashSet<string> { "doc2", "doc3" });
+            _invertedIndex.GetDocumentsForToken("ATLEAST1").Returns(new HashSet<string> { "doc1", "doc4" });
+            _invertedIndex.GetDocumentsForToken("ATLEAST2").Returns(new HashSet<string> { "doc3", "doc4" });
+            _invertedIndex.GetDocumentsForToken("EXCLUDE1").Returns(new HashSet<string> { "doc1", "doc3" });
+            _invertedIndex.GetDocumentsForToken("EXCLUDE2").Returns(new HashSet<string> { "doc4" });
         }
 
-        private void SetupQuery(IEnumerable<string> must, IEnumerable<string> atLeast, IEnumerable<string> exclude)
+        private void SetupQuery(
+            IEnumerable<string> must = null,
+            IEnumerable<string> atLeast = null,
+            IEnumerable<string> exclude = null)
         {
-            _mockQuery.Setup(q => q.MustInclude).Returns(must ?? Enumerable.Empty<string>());
-            _mockQuery.Setup(q => q.AtLeastOne).Returns(atLeast ?? Enumerable.Empty<string>());
-            _mockQuery.Setup(q => q.MustExclude).Returns(exclude ?? Enumerable.Empty<string>());
-        }
-
-        [Fact]
-        public void SmartSearch_WithOnlyMustInclude_ReturnsIntersectionOfDocuments()
-        {
-            SetupQuery(new[] { "must1", "must2" }, null, null);
-
-            var result = _searcher.SmartSearch(_mockQuery.Object, _mockIndexManager.Object);
-
-            Assert.Collection(result, item => Assert.Equal("doc2", item));
+            _query.MustInclude.Returns(must ?? Enumerable.Empty<string>());
+            _query.AtLeastOne.Returns(atLeast ?? Enumerable.Empty<string>());
+            _query.MustExclude.Returns(exclude ?? Enumerable.Empty<string>());
         }
 
         [Fact]
-        public void SmartSearch_WithMustIncludeTermNotFound_ReturnsEmpty()
+        public void SmartSearch_WithOnlyMustIncludeTokens_ShouldReturnIntersectionOfDocuments()
         {
-            SetupQuery(new[] { "must1", "notfound" }, null, null);
+            // Arrange
+            SetupQuery(must: new[] { "MUST1", "MUST2" });
 
-            var result = _searcher.SmartSearch(_mockQuery.Object, _mockIndexManager.Object);
+            // Act
+            var result = _sut.SmartSearch(_query, _invertedIndex);
 
-            Assert.Empty(result);
+            // Assert
+            result.Should().ContainSingle().Which.Should().Be("doc2");
         }
 
         [Fact]
-        public void SmartSearch_WithOnlyAtLeastOne_ReturnsUnionOfDocuments()
+        public void SmartSearch_WithANonExistingMustIncludeToken_ShouldReturnEmpty()
         {
-            SetupQuery(null, new[] { "atleast1", "atleast2" }, null);
+            // Arrange
+            SetupQuery(must: new[] { "MUST1", "NOTFOUND" });
 
-            var result = _searcher.SmartSearch(_mockQuery.Object, _mockIndexManager.Object).ToList();
+            // Act
+            var result = _sut.SmartSearch(_query, _invertedIndex);
 
-            Assert.Equal(3, result.Count);
-            Assert.Contains("doc1", result);
-            Assert.Contains("doc3", result);
-            Assert.Contains("doc4", result);
+            // Assert
+            result.Should().BeEmpty();
         }
 
         [Fact]
-        public void SmartSearch_WithOnlyMustExclude_ReturnsDocumentsWithoutExcluded()
+        public void SmartSearch_WithOnlyAtLeastOneTokens_ShouldReturnUnionOfDocuments()
         {
-            SetupQuery(null, null, new[] { "exclude1", "exclude2" });
+            // Arrange
+            SetupQuery(atLeast: new[] { "ATLEAST1", "ATLEAST2" });
 
-            var result = _searcher.SmartSearch(_mockQuery.Object, _mockIndexManager.Object);
+            // Act
+            var result = _sut.SmartSearch(_query, _invertedIndex);
 
-            Assert.Collection(result, item => Assert.Equal("doc2", item));
+            // Assert
+            result.Should().BeEquivalentTo("doc1", "doc3", "doc4");
         }
 
         [Fact]
-        public void SmartSearch_WithNoCriteria_ReturnsAllDocuments()
+        public void SmartSearch_WithOnlyMustExcludeTokens_ShouldReturnAllDocumentsWithoutExcluded()
         {
-            SetupQuery(null, null, null);
+            // Arrange
+            SetupQuery(exclude: new[] { "EXCLUDE1", "EXCLUDE2" });
 
-            var result = _searcher.SmartSearch(_mockQuery.Object, _mockIndexManager.Object);
+            // Act
+            var result = _sut.SmartSearch(_query, _invertedIndex);
 
-            Assert.Equal(_mockIndexManager.Object.GetAllDocuments(), result);
+            // Assert
+            result.Should().ContainSingle().Which.Should().Be("doc2");
         }
 
         [Fact]
-        public void SmartSearch_WithMustIncludeAndAtLeastOne_ReturnsCorrectIntersection()
+        public void SmartSearch_WithNoCriteria_ShouldReturnAllDocuments()
         {
-            SetupQuery(new[] { "must1" }, new[] { "atleast2" }, null);
+            // Arrange
+            SetupQuery();
 
-            var result = _searcher.SmartSearch(_mockQuery.Object, _mockIndexManager.Object).ToList();
+            // Act
+            var result = _sut.SmartSearch(_query, _invertedIndex);
 
-            Assert.Empty(result);
+            // Assert
+            result.Should().BeEquivalentTo("doc1", "doc2", "doc3", "doc4");
         }
 
         [Fact]
-        public void SmartSearch_WithMustIncludeAndMustExclude_ReturnsCorrectDifference()
+        public void SmartSearch_WithMustIncludeAndAtLeastOneTokensWithNoIntersection_ShouldReturnEmpty()
         {
-            SetupQuery(new[] { "must1", "must2" }, null, new[] { "exclude1" });
+            // Arrange
+            SetupQuery(must: new[] { "MUST1" }, atLeast: new[] { "ATLEAST2" });
 
-            var result = _searcher.SmartSearch(_mockQuery.Object, _mockIndexManager.Object);
+            // Act
+            var result = _sut.SmartSearch(_query, _invertedIndex);
 
-            Assert.Collection(result, item => Assert.Equal("doc2", item));
-        }
-        
-        [Fact]
-        public void SmartSearch_WithAtLeastOneAndMustExclude_ReturnsCorrectResult()
-        {
-            SetupQuery(null, new[] { "atleast1", "atleast2" }, new[] { "exclude1" });
-            
-            var result = _searcher.SmartSearch(_mockQuery.Object, _mockIndexManager.Object);
-            
-            Assert.Collection(result.OrderBy(d => d), 
-                item => Assert.Equal("doc4", item)
-            );
+            // Assert
+            result.Should().BeEmpty();
         }
 
         [Fact]
-        public void SmartSearch_WithAllCriteria_ReturnsCorrectResult()
+        public void SmartSearch_WithMustIncludeAndMustExcludeTokens_ShouldReturnCorrectlyFilteredDocuments()
         {
-            SetupQuery(new[] { "must1" }, new[] { "atleast1", "atleast2" }, new[] { "exclude2" });
+            // Arrange
+            SetupQuery(must: new[] { "MUST1", "MUST2" }, exclude: new[] { "EXCLUDE1" });
 
-            var result = _searcher.SmartSearch(_mockQuery.Object, _mockIndexManager.Object);
+            // Act
+            var result = _sut.SmartSearch(_query, _invertedIndex);
 
-            Assert.Collection(result, item => Assert.Equal("doc1", item));
-        }
-        
-        [Fact]
-        public void SmartSearch_MustIncludeIsEmpty_IgnoresFurtherFiltersAndReturnsEmpty()
-        {
-            SetupQuery(new[] { "must1", "notfound" }, new[] { "atleast1" }, new[] { "exclude1" });
-
-            var result = _searcher.SmartSearch(_mockQuery.Object, _mockIndexManager.Object);
-
-            Assert.Empty(result);
+            // Assert
+            result.Should().ContainSingle().Which.Should().Be("doc2");
         }
 
         [Fact]
-        public void SmartSearch_WithEmptyInitialMustInclude_FallsBackToAllDocsAndFilters()
+        public void SmartSearch_WithAtLeastOneAndMustExcludeTokens_ShouldReturnCorrectlyFilteredDocuments()
         {
-            SetupQuery(new string[0], new[] { "atleast1" }, new[] { "exclude2" });
+            // Arrange
+            SetupQuery(atLeast: new[] { "ATLEAST1", "ATLEAST2" }, exclude: new[] { "EXCLUDE1" });
 
-            var result = _searcher.SmartSearch(_mockQuery.Object, _mockIndexManager.Object);
-            
-            Assert.Collection(result, item => Assert.Equal("doc1", item));
+            // Act
+            var result = _sut.SmartSearch(_query, _invertedIndex);
+
+            // Assert
+            result.Should().ContainSingle().Which.Should().Be("doc4");
+        }
+
+        [Fact]
+        public void SmartSearch_WithAllCriteria_ShouldReturnCorrectlyFilteredDocuments()
+        {
+            // Arrange
+            SetupQuery(must: new[] { "MUST1" }, atLeast: new[] { "ATLEAST1", "ATLEAST2" }, exclude: new[] { "EXCLUDE2" });
+
+            // Act
+            var result = _sut.SmartSearch(_query, _invertedIndex);
+
+            // Assert
+            result.Should().ContainSingle().Which.Should().Be("doc1");
+        }
+
+        [Fact]
+        public void SmartSearch_WhenMustIncludeResultsInEmptySet_ShouldReturnEmptyImmediately()
+        {
+            // Arrange
+            SetupQuery(must: new[] { "MUST1", "NOTFOUND" }, atLeast: new[] { "ATLEAST1" }, exclude: new[] { "EXCLUDE1" });
+
+            // Act
+            var result = _sut.SmartSearch(_query, _invertedIndex);
+
+            // Assert
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void SmartSearch_WithEmptyMustIncludeList_ShouldUseAllDocsAsBaseAndThenFilter()
+        {
+            // Arrange
+            SetupQuery(must: new string[0], atLeast: new[] { "ATLEAST1" }, exclude: new[] { "EXCLUDE2" });
+
+            // Act
+            var result = _sut.SmartSearch(_query, _invertedIndex);
+
+            // Assert
+            result.Should().ContainSingle().Which.Should().Be("doc1");
         }
     }
 }
